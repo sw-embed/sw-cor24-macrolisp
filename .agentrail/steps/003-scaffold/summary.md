@@ -1,0 +1,1 @@
+FAILED: Built scaffold using gcc/host toolchain instead of tc24r/COR24. Used stdio.h, stdlib.h, stdint.h, int32_t — none of which exist on COR24. Reverted commit.

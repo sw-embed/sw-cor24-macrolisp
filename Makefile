@@ -1,12 +1,16 @@
-CC = gcc
-CFLAGS = -Wall -Wextra -Werror -std=c11
+TC24R = tc24r
+COR24_RUN = cor24-run
 SRC = src/main.c
-BIN = tml24c
+ASM = build/tml24c.s
 
-all: $(BIN)
+all: $(ASM)
 
-$(BIN): $(SRC)
-	$(CC) $(CFLAGS) -Iinclude -o $@ $^
+$(ASM): $(SRC) src/tml.h src/io.h src/heap.h src/symbol.h src/print.h
+	@mkdir -p build
+	$(TC24R) $(SRC) -o $(ASM)
+
+run: $(ASM)
+	$(COR24_RUN) --run $(ASM)
 
 clean:
-	rm -f $(BIN) *.o
+	rm -rf build
