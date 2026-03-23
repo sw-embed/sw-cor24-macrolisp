@@ -1,13 +1,12 @@
 CC = gcc
 CFLAGS = -Wall -Wextra -Werror -std=c11
-SRCDIR = src
-SRCS = $(wildcard $(SRCDIR)/*.c)
+SRC = src/main.c
 BIN = tml24c
 
 all: $(BIN)
 
-$(BIN): $(SRCS)
-	$(CC) $(CFLAGS) -I$(SRCDIR) -o $@ $^
+$(BIN): $(SRC)
+	$(CC) $(CFLAGS) -Iinclude -o $@ $^
 
 clean:
 	rm -f $(BIN) *.o
