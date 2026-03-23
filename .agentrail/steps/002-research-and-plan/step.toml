@@ -1,6 +1,6 @@
 number = 2
 slug = "research-and-plan"
-status = "pending"
+status = "in-progress"
 description = "Read research, study COR24 toolchain, create architecture/prd/design/plan/stats docs"
 role = "production"
 context_files = ["docs/research.txt"]
