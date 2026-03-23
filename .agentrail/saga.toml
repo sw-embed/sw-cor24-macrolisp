@@ -1,0 +1,5 @@
+name = "tml24c"
+status = "active"
+current_step = 0
+created_at = "2026-03-23T13:59:53"
+plan_file = ".agentrail/plan.md"
