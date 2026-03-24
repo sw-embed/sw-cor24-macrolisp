@@ -135,15 +135,20 @@ int env_lookup(int sym, int env) {
 }
 
 int env_bind(int params, int args, int env) {
+    gc_protect(env);
+    gc_protect(args);
     while (IS_CONS(params)) {
+        gc_roots[gc_root_count - 2] = env;  /* update protected env */
         env = env_extend(car(params), car(args), env);
         params = cdr(params);
         args = cdr(args);
+        gc_roots[gc_root_count - 1] = args;  /* update protected args */
     }
     /* Rest arg: (a b . rest) or bare symbol */
     if (IS_SYMBOL(params)) {
         env = env_extend(params, args, env);
     }
+    gc_unprotect(2);
     return env;
 }
 
@@ -494,8 +499,11 @@ int eval(int expr, int env) {
     if (IS_EXTENDED(fn)) {
         int fn_type = ext_type(fn);
         if (fn_type == ETYPE_CLOSURE) {
-            env = env_bind(closure_params(fn), evaled_args, closure_env(fn));
-            expr = closure_body(fn);
+            int cl_params = closure_params(fn);
+            int cl_body = closure_body(fn);
+            int cl_env = closure_env(fn);
+            env = env_bind(cl_params, evaled_args, cl_env);
+            expr = cl_body;
             continue;
         }
         if (fn_type == ETYPE_PRIMITIVE) {

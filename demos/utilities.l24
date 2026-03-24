@@ -1,0 +1,24 @@
+;; utilities.l24 -- Clojure-inspired utility functions demo
+;;
+;; Run with: just eval demos/utilities.l24
+
+;; partial: fix some arguments
+(define add10 (partial + 10))
+(add10 5)
+(add10 20)
+
+;; juxt: apply two functions, return both results
+((juxt car cdr) (cons 1 2))
+((juxt length reverse) (list 1 2 3))
+
+;; doseq: iterate over a list with side effects
+(doseq (x (list 10 20 30)) (println x))
+
+;; dotimes: iterate n times
+(dotimes (i 4) (println i))
+
+;; for-each with display
+(for-each (lambda (x) (begin (display (str x " "))) ) (list 1 2 3 4 5))
+(newline)
+
+(exit)

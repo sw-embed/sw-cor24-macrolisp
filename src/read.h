@@ -104,6 +104,10 @@ int read_list() {
         read_ptr = read_ptr + 1;
         skip_whitespace();
         int d = read_expr();
+        skip_whitespace();
+        if (*read_ptr == ')') {
+            read_ptr = read_ptr + 1;
+        }
         return cons(first, d);
     }
 

@@ -108,6 +108,15 @@ void load_prelude() {
     eval_str("(define take-while (lambda (p lst) (if (null? lst) nil (if (p (car lst)) (cons (car lst) (take-while p (cdr lst))) nil))))");
     eval_str("(define drop-while (lambda (p lst) (if (null? lst) nil (if (p (car lst)) (drop-while p (cdr lst)) lst))))");
 
+    /* Iteration */
+    eval_str("(define for-each (lambda (f lst) (if (null? lst) nil (begin (f (car lst)) (for-each f (cdr lst))))))");
+
+    /* Utility functions (Clojure-inspired) */
+    eval_str("(define partial (lambda (f . args) (lambda rest (apply f (append args rest)))))");
+    eval_str("(define juxt (lambda (f g) (lambda (x) (list (f x) (g x)))))");
+    eval_str("(defmacro doseq (binding body) `(for-each (lambda (,(car binding)) ,body) ,(cadr binding)))");
+    eval_str("(defmacro dotimes (binding body) `(for-each (lambda (,(car binding)) ,body) (range ,(cadr binding))))");
+
     /* Trampoline: repeatedly call thunks until non-function result */
     eval_str("(define trampoline (lambda (f) (let ((r (f))) (if (fn? r) (trampoline r) r))))");
 
