@@ -50,9 +50,7 @@ demo-blink: build-repl
 
 # 99 Bottles of Beer demo
 demo-bottles: build-repl
-    grep -v '^;;' demos/bottles.l24 | {{cor24_run}} --run build/repl.s --terminal --speed 0 -n 500000000 2>&1 | \
-        grep -v -E '^Assembled |Executed [0-9]+ instructions' | \
-        python3 scripts/strip-prompts.py
+    grep -v '^;;' demos/bottles.l24 | {{cor24_run}} --run build/repl.s --terminal --speed 0 -n 200000000
 
 # Clean build artifacts
 clean:

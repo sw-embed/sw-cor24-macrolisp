@@ -85,6 +85,11 @@ void load_prelude() {
     eval_str("(define assoc (lambda (key alist) (if (null? alist) nil (if (eq? key (caar alist)) (car alist) (assoc key (cdr alist))))))");
     eval_str("(define get (lambda (key alist default) (if (null? alist) default (if (eq? key (caar alist)) (cdar alist) (get key (cdr alist) default)))))");
 
+    /* String utilities */
+    eval_str("(define ->str (lambda (x) (cond ((string? x) x) ((number? x) (number->string x)) (t \"\"))))");
+    eval_str("(define str2 (lambda (a b) (string-append (->str a) (->str b))))");
+    eval_str("(define str (lambda args (reduce str2 \"\" args)))");
+
     /* COR24-TB I/O addresses */
     eval_str("(define IO-LED #xFF0000)");
     eval_str("(define IO-SWITCH #xFF0000)");
@@ -99,10 +104,10 @@ void load_prelude() {
 }
 
 void repl() {
-    char line[256];
+    char line[1024];
     puts_str("> ");
     while (1) {
-        int len = read_line(line, 256);
+        int len = read_line(line, 1024);
         if (len < 0) {
             /* Ctrl-D: EOF */
             puts_str("Bye.\n");

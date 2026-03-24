@@ -59,6 +59,7 @@ int sym_unquote_splicing;
 #define PRIM_GC         31
 #define PRIM_HEAP_USED  32
 #define PRIM_HEAP_SIZE  33
+#define PRIM_NUM_TO_STR 34
 
 /* --- Extended object accessors --- */
 
@@ -289,6 +290,22 @@ int apply_primitive(int id, int args) {
     }
     if (id == PRIM_HEAP_SIZE) {
         return MAKE_FIXNUM(HEAP_SIZE);
+    }
+    if (id == PRIM_NUM_TO_STR) {
+        int n = FIXNUM_VAL(a);
+        char buf[12];
+        int neg = 0;
+        if (n < 0) { neg = 1; n = 0 - n; }
+        if (n == 0) { buf[0] = '0'; buf[1] = 0; return make_string(buf, 1); }
+        int i = 0;
+        while (n > 0) { buf[i] = '0' + n % 10; n = n / 10; i = i + 1; }
+        if (neg) { buf[i] = '-'; i = i + 1; }
+        /* reverse in place */
+        int j = 0;
+        int k = i - 1;
+        while (j < k) { char t = buf[j]; buf[j] = buf[k]; buf[k] = t; j = j + 1; k = k - 1; }
+        buf[i] = 0;
+        return make_string(buf, i);
     }
 
     return NIL_VAL;
@@ -531,4 +548,5 @@ void eval_init() {
     register_prim("gc", PRIM_GC);
     register_prim("heap-used", PRIM_HEAP_USED);
     register_prim("heap-size", PRIM_HEAP_SIZE);
+    register_prim("number->string", PRIM_NUM_TO_STR);
 }
