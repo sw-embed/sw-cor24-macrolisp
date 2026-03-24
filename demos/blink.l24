@@ -1,6 +1,6 @@
 ;; blink.l24 -- Blink D2 (LED bit 0) on COR24-TB
 ;;
-;; Run with: make demo-blink
+;; Run with: just demo-blink
 ;; Exit with: Ctrl-]
 ;;
 ;; Timing calibrated for --speed 500000.

@@ -10,5 +10,5 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 PROJECT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 
 cd "$PROJECT_DIR"
-make -s build/repl.s
+just build-repl
 exec cor24-run --run build/repl.s --terminal --echo --speed 0

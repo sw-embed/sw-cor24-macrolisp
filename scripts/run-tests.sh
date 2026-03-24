@@ -10,10 +10,10 @@ PROJECT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 cd "$PROJECT_DIR"
 
 if [[ "${1:-}" == "-v" ]]; then
-    make -s build/tml24c.s
+    just build
     cor24-run --run build/tml24c.s --speed 0 -n 10000000 2>&1 | \
         grep -E '^\[UART TX' | \
         python3 scripts/extract-uart.py
 else
-    make test
+    just test
 fi

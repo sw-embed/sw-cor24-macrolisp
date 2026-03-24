@@ -3,16 +3,16 @@
 ## Usage
 
 ```bash
-make eval FILE=examples/demo.l24
+just eval examples/demo.l24
 ```
 
 ## How It Works
 
-1. The `.l24` file is preprocessed (comments stripped, lines joined with `\n` escapes)
-2. Content is passed to `cor24-run` via `--uart-input`
+1. The `.l24` file is preprocessed (comment lines stripped)
+2. Content is piped to `cor24-run --terminal` via stdin
 3. The emulator's FIFO-drain mechanism feeds bytes to UART RX one at a time as the program reads them
 4. The tml24c REPL evaluates each line and prints results to UART TX
-5. `scripts/extract-uart.py` extracts clean output from the `[UART TX]` log
+5. Output is cleaned (prompts and emulator metadata stripped)
 
 ## File Extension
 
@@ -46,11 +46,12 @@ Output:
 (3 2 1)
 ```
 
-## Build Targets
+## Commands
 
-| Target | Description |
-|--------|-------------|
-| `make run` | Launch REPL (blocks waiting for UART input) |
-| `make eval FILE=x.l24` | Evaluate a file and print results |
-| `make test` | Run all test suites |
-| `make` | Build test binary only |
+| Command | Description |
+|---------|-------------|
+| `just run` | Interactive REPL (Ctrl-] to exit) |
+| `just eval <file>` | Evaluate a file and print results |
+| `just test` | Run all test suites |
+| `just build` | Build test binary only |
+| `just demo-blink` | LED blink demo |

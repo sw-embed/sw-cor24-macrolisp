@@ -10,7 +10,7 @@ PROJECT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 [[ $# -lt 1 ]] && { echo "Usage: $0 '<expression>'"; exit 1; }
 
 cd "$PROJECT_DIR"
-make -s build/tml24c.s
+just build
 
 # The test binary includes compile tests that emit assembly.
 # For arbitrary expressions, we run the REPL build — but the compiler

@@ -55,9 +55,16 @@ Tiny Macro Lisp (tml24c): a minimal Lisp-1 with lexical scope, unhygienic defmac
 
 ## Build
 
+Uses [just](https://github.com/casey/just) as the command runner.
+
 ```bash
-make          # build
-make clean    # clean
+just build       # build test binary
+just build-repl  # build REPL binary
+just test        # run test suite
+just run         # interactive REPL (Ctrl-] to exit)
+just eval <file> # evaluate a .l24 file
+just demo-blink  # LED blink demo
+just clean       # clean build artifacts
 ```
 
 Compiler flags: `-Wall -Wextra -Werror -std=c11`. Never suppress warnings.

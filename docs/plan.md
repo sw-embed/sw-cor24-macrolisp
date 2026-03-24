@@ -15,7 +15,7 @@ Six phases, each building on the last. Host-first development — all phases run
 2. Create `src/platform_host.c` — putchar/getchar/halt via stdio
 3. Create `src/main.c` — skeleton main with init and test stub
 4. Create/update `Makefile` — compile all .c in src/, link, `-Wall -Wextra -Werror -std=c11`
-5. Verify: `make clean && make` succeeds with zero warnings
+5. Verify: `just clean && just build` succeeds with zero warnings
 
 **Deliverable:** Empty program that compiles and runs, prints "tml24c ok".
 
@@ -234,7 +234,7 @@ This should work naturally if lambda captures the current environment.
 1. Complete test suite
 2. Document all special forms and builtins
 3. Write demo programs showcasing macros, closures, list processing
-4. Ensure `make clean && make` is zero-warning on host
+4. Ensure `just clean && just build` is zero-warning on host
 5. Verify emulator demo end-to-end
 
 ---
@@ -243,7 +243,7 @@ This should work naturally if lambda captures the current environment.
 
 | Phase | Milestone | Key Test |
 |-------|-----------|----------|
-| 0 | Scaffold compiles | `make` succeeds |
+| 0 | Scaffold compiles | `just build` succeeds |
 | 1a | Heap + symbols | Construct `(a b c)` in C |
 | 1b | Reader | Parse `(+ 1 2)` from text |
 | 1c | Printer | Print `(+ 1 2)` back |
@@ -286,7 +286,7 @@ The standard library prelude (map, filter, foldr, reverse, abs, when, unless, et
 
 **Options to explore:**
 
-1. **No-prelude build** — A `src/bare-repl.c` that skips `load_prelude()`. Useful for profiling, minimal footprint, or when the user wants full control over what's loaded. Would add a `make run-bare` target.
+1. **No-prelude build** — A `src/bare-repl.c` that skips `load_prelude()`. Useful for profiling, minimal footprint, or when the user wants full control over what's loaded. Would add a `just run-bare` recipe.
 
 2. **Selectable prelude at eval time** — The `load-eval.sh` script already supports `-p prelude.l24` to prepend a custom prelude file via UART before the main code. This layers on top of the built-in prelude. For a fully custom prelude (replacing the built-in), combine with the bare build.
 

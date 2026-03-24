@@ -38,7 +38,7 @@ done
 [[ -n "$PRELUDE" && ! -f "$PRELUDE" ]] && { echo "Error: $PRELUDE not found"; exit 1; }
 
 cd "$PROJECT_DIR"
-make -s build/repl.s
+just build-repl
 
 # Build input: optional prelude + main file
 INPUT_CMD="sed '/^;;/d' \"$FILE\""

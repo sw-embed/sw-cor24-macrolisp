@@ -38,13 +38,6 @@ The main binary runs all test suites before entering the REPL, consuming million
 
 ## Current State
 
-- `make run` — launches REPL, correctly blocks waiting for UART input
-- `make eval FILE=examples/demo.l24` — evaluates `.l24` files via UART and prints results
-- `make test` — runs all 5 test suites (scaffold, reader, eval, gc, compile)
-
-## Future: Interactive Terminal
-
-True interactive REPL use requires `cor24-run` to gain a `--terminal` mode that:
-- Sets the terminal to raw mode
-- Reads stdin keystrokes and forwards them to UART RX
-- Prints UART TX bytes directly to stdout (no `[UART TX]` decoration)
+- `just run` — interactive REPL via `cor24-run --terminal --echo` (Ctrl-] to exit)
+- `just eval examples/demo.l24` — evaluates `.l24` files and prints results
+- `just test` — runs all 5 test suites (scaffold, reader, eval, gc, compile)
