@@ -2,10 +2,14 @@
 ;;
 ;; Run with: just eval demos/metaprogramming.l24
 
-;; === macroexpand: see what macros produce ===
+;; === macroexpand-1: one step of macro expansion ===
+
+(macroexpand-1 '(when (< x 0) (println 'negative)))
+(macroexpand-1 '(let ((a 1) (b 2)) (+ a b)))
+
+;; === macroexpand: fully expand nested macros ===
 
 (macroexpand '(when (< x 0) (println 'negative)))
-(macroexpand '(let ((a 1) (b 2)) (+ a b)))
 (macroexpand '(cond ((= n 0) 'zero) ((= n 1) 'one) (t 'other)))
 ;; Note: -> and ->> are in the full prelude, not standard
 ;; (macroexpand '(-> x (f a)))  ; use: just eval-full

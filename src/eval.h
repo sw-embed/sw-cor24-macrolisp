@@ -309,12 +309,19 @@ int apply_primitive(int id, int args) {
         return eval(a, global_env);
     }
     if (id == PRIM_MACEXPAND) {
-        /* (macroexpand '(when x y)) — expand macro call once without eval */
+        /* (macroexpand-1 '(when x y)) — expand macro call once without eval */
         if (!IS_CONS(a)) return a;
         int mhead = car(a);
         int margs = cdr(a);
         if (IS_SYMBOL(mhead)) {
-            int fn = env_lookup(mhead, global_env);
+            /* Silent lookup — don't print error for special forms */
+            int e = global_env;
+            int fn = NIL_VAL;
+            while (!IS_NIL(e)) {
+                int binding = car(e);
+                if (car(binding) == mhead) { fn = cdr(binding); break; }
+                e = cdr(e);
+            }
             if (IS_EXTENDED(fn) && ext_type(fn) == ETYPE_MACRO) {
                 int mac_env = env_bind(closure_params(fn), margs, closure_env(fn));
                 return eval(closure_body(fn), mac_env);
@@ -647,7 +654,7 @@ void eval_init() {
     register_prim("number->string", PRIM_NUM_TO_STR);
     register_prim("fn?", PRIM_FNQP);
     register_prim("eval", PRIM_EVAL);
-    register_prim("macroexpand", PRIM_MACEXPAND);
+    register_prim("macroexpand-1", PRIM_MACEXPAND);
     register_prim("gensym", PRIM_GENSYM);
     register_prim("symbol->string", PRIM_SYM_TO_STR);
     register_prim("string->symbol", PRIM_STR_TO_SYM);
