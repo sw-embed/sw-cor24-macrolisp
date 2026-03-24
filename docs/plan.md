@@ -278,173 +278,90 @@ Plus ~100 lines of Lisp for stdlib.
 
 ---
 
-## Future Considerations
+## Current Status (as of v0.1.0)
 
-### Configurable Prelude
+### Implemented
 
-The standard library prelude (map, filter, foldr, reverse, abs, when, unless, etc.) is currently compiled into `src/repl.c` as C string literals evaluated at startup (~800K instructions overhead).
+| Feature | Details |
+|---------|---------|
+| **Core evaluator** | 8 special forms: quote, quasiquote, if, define, set!, lambda, defmacro, begin |
+| **41 C primitives** | Arithmetic, list ops, strings, I/O, GC, metaprogramming |
+| **5 compiled preludes** | minimal (6 defs), standard (~50), full (~90), scheme (~55), bare (0) |
+| **Tail-call optimization** | if, begin, closure application |
+| **Conservative GC** | Stack scanning, iterative cdr marking |
+| **Quasiquote** | `` ` ``, `,`, `,@` with qq_expand |
+| **Strings** | Immutable, 119-char literals, 6 primitives |
+| **Lazy sequences** | lazy-cons, lazy-map, lazy-filter, iterate, lazy-range |
+| **Threading macros** | `->`, `->>` (two-arg) |
+| **Anaphoric macros** | aif, awhen, aand |
+| **Variadic functions** | `(lambda args ...)`, `(lambda (a . rest) ...)` |
+| **set!** | Mutable assignment in local and global env |
+| **Metaprogramming** | eval, macroexpand-1, macroexpand, gensym, symbol↔string |
+| **Comments** | `;` line, `#_` datum, `(comment ...)` form |
+| **Multi-line REPL** | Paren-depth tracking across newlines |
+| **Error handling** | Type checks, div-by-zero, car/cdr safety; PANIC diagnostics |
+| **Reader extensions** | `#t`/`#f`, `#x` hex, `#_` datum comment |
+| **19 demos** | Language features, bottles variants, Scheme, fixed-point |
+| **CLI wrapper** | `bin/tml24c` with --help, --version |
 
-**Options to explore:**
+### Prelude tiers
 
-1. **No-prelude build** — A `src/bare-repl.c` that skips `load_prelude()`. Useful for profiling, minimal footprint, or when the user wants full control over what's loaded. Would add a `just run-bare` recipe.
+| Prelude | Defs | Build | Run |
+|---------|------|-------|-----|
+| minimal | 6 | `just build-minimal` | `just run-minimal` |
+| standard | ~50 | `just build-standard` | `just run` |
+| full | ~90 | `just build-full` | `just run-full` |
+| scheme | ~55 | `just build-scheme` | `just run-scheme` |
+| bare | 0 | `just build-bare` | `just run-custom <prelude.l24>` |
 
-2. **Selectable prelude at eval time** — The `load-eval.sh` script already supports `-p prelude.l24` to prepend a custom prelude file via UART before the main code. This layers on top of the built-in prelude. For a fully custom prelude (replacing the built-in), combine with the bare build.
+---
 
-3. **tc24r `-D` support** — If the compiler gains `-D` preprocessor defines, a single `src/repl.c` with `#ifdef PRELUDE` guards would replace the need for separate source files.
+## Next Steps
 
-4. **Prelude-as-file** — Move the prelude definitions from C strings to a `.l24` file that gets embedded at compile time (e.g., via `xxd -i` or a build step that generates a C header from the file). This makes the prelude editable without touching C code.
+### Priority 1: Quick wins (no external dependencies)
 
-### Multi-Methods (Clojure-inspired)
+| Feature | Effort | Description |
+|---------|--------|-------------|
+| `letrec` | Small | Self-referencing local bindings. Expand to `let` + `set!`: `(let ((f nil)) (set! f (lambda ...)) body)` |
+| `(define (f x) body)` shorthand | Small | Detect `(define (name . params) body)` in eval, expand to `(define name (lambda params body))` |
+| `try`/`guard` error recovery | Small | Global error flag + macro. `(try expr fallback)` checks flag after eval |
+| Multi-methods | Small | Pure Lisp with alist dispatch. `set!` makes defmethod cleaner |
+| `group-by` / `frequencies` | Small | Pure Lisp with reduce + alist |
 
-Clojure multi-methods dispatch on an arbitrary function, allowing open extension without modifying existing code. A tml24c version could work using association lists as dispatch tables:
+### Priority 2: Medium features (tml24c C changes)
 
-```lisp
-;; Type dispatch function
-(define type-of (lambda (x)
-  (cond ((number? x) 'number)
-        ((string? x) 'string)
-        ((pair? x)   'pair)
-        ((null? x)   'nil)
-        (t           'symbol))))
+| Feature | Effort | Description |
+|---------|--------|-------------|
+| Flat vectors | Medium (~80 lines) | New ETYPE_VECTOR, contiguous cells, `vector-ref`/`vector-set!`/`vector-length` |
+| Debug/trace primitives | Medium | Instruction counter, env dump, GC stats, trace on/off |
+| String pool GC | Medium | Compact or relocate dead strings during collection |
+| `read` primitive | Small | Expose `read_str` as a Lisp primitive for runtime parsing |
 
-;; Multi-method: dispatch table + dispatch function
-(define make-multi (lambda (dispatch-fn)
-  (list dispatch-fn nil)))
+### Priority 3: cor24-rs changes (feature requests written)
 
-(define defmethod (lambda (multi type-val handler)
-  (let ((dispatch-fn (car multi))
-        (table (cadr multi)))
-    (list dispatch-fn (cons (cons type-val handler) table)))))
+| Feature | Request | Description |
+|---------|---------|-------------|
+| `--stack-kilobytes` | `docs/required-stack-changes.md` | 3/8/custom KB stack for larger preludes |
+| Timer I/O register | `cor24-rs/docs/feature-timer-register.md` | Millisecond counter at 0xFF0200 for speed-independent delay |
+| Watchdog / exit codes | `cor24-rs/docs/feature-watchdog.md` | Distinguish clean halt vs PANIC vs timeout; detect stuck programs |
+| `--echo` improvements | `cor24-rs/docs/feature-terminal-echo.md` | Backspace handling, control char suppression |
 
-(define invoke-multi (lambda (multi x)
-  (let ((dispatch-fn (car multi))
-        (table (cadr multi)))
-    (let ((key ((car multi) x)))
-      (let ((entry (assoc key table)))
-        (if entry ((cdr entry) x) nil))))))
-```
+### Priority 4: Larger efforts
 
-Usage:
-```lisp
-(define describe (make-multi type-of))
-(define describe (defmethod describe 'number (lambda (x) (display "a number"))))
-(define describe (defmethod describe 'string (lambda (x) (display "a string"))))
-(invoke-multi describe 42)      ;; prints "a number"
-(invoke-multi describe "hello") ;; prints "a string"
-```
+| Feature | Effort | Description |
+|---------|--------|-------------|
+| Persistent vectors | Large (~500 lines) | Clojure-style HAMT, O(log32 n) updates with structural sharing |
+| Hash maps | Large (~600 lines) | Persistent hash maps via bitmap-indexed tries |
+| Software floats | Medium | Requires tc24r + emulator support first |
+| Scheme `call/cc` | Very large | Stack reification — likely not feasible on COR24 |
+| Hygienic macros | Very large | syntax-rules/syntax-case (~200+ lines) |
 
-**Status:** Pure Lisp implementation, no C changes needed. Feasible now that strings, quasiquote, let, and cond are available. Could be added as a prelude library or a `.l24` file.
+### Interactive terminal improvements
 
-**Limitations:** Without mutable state (`set!`), each `defmethod` creates a new multi-method object rather than mutating the existing one. A `set!` primitive or mutable cells would make the API cleaner.
+| Feature | Effort | Description |
+|---------|--------|-------------|
+| Line editing (backspace) | Small | Handle BS/DEL in read_line |
+| Cursor movement (arrows) | Medium | Terminal escape sequences |
+| History (up/down) | Large | Ring buffer of previous lines |
 
-### `set!` — Mutable Assignment
-
-A `set!` special form that modifies an existing binding in the environment. Small C change: walk the env alist to find the binding, overwrite the cdr.
-
-```lisp
-(define x 0)
-(set! x 42)
-x  ;; => 42
-```
-
-**Why it matters:** `set!` is the key enabler for several Clojure features:
-- **Memoized lazy sequences** — cache forced thunk results
-- **Atoms** (`atom`, `swap!`, `deref`) — Clojure's core state model, trivially built on `set!`
-- **Cleaner multi-methods** — mutate dispatch table in place instead of rebinding
-- **Counters, accumulators** — common imperative patterns
-
-**Effort:** ~10 lines of C in eval.h. Walk env alist, find binding, set cdr.
-
-### Lazy Sequences
-
-Clojure's lazy sequences evaluate elements on demand. The core mechanism already exists in tml24c — closures are thunks:
-
-```lisp
-;; Lazy cons: tail is a thunk
-(define lazy-cons (lambda (h t) (cons h t)))
-(define lazy-car car)
-(define lazy-cdr (lambda (s)
-  (let ((t (cdr s))) (if (fn? t) (t) t))))
-
-;; Infinite sequence
-(define integers-from (lambda (n)
-  (lazy-cons n (lambda () (integers-from (+ n 1))))))
-
-;; Take first 5 from infinite sequence
-(lazy-take 5 (integers-from 0))  ;; => (0 1 2 3 4)
-```
-
-Without `set!`, forcing the same lazy-cdr twice recomputes the thunk. With `set!`, the result can be cached on first force (memoized lazy sequences).
-
-**Useful lazy operations:** `iterate`, `repeat`, `cycle`, `take-while`, `drop-while`.
-
-**Effort:** Prelude definitions only (no C changes). Memoized version needs `set!`.
-
-### Threading Macros (`->` and `->>`)
-
-Clojure's most popular syntactic feature. Rewrites nested calls as a readable pipeline:
-
-```lisp
-;; Without threading (inside-out reading)
-(filter positive? (map square (range 10)))
-
-;; With ->> (left-to-right reading)
-(->> (range 10) (map square) (filter positive?))
-```
-
-`->` threads as first argument, `->>` threads as last argument:
-```lisp
-(-> x (f a) (g b))   ;; => (g (f x a) b)
-(->> x (f a) (g b))  ;; => (g a (f x b))
-```
-
-**Effort:** Recursive macros using quasiquote. ~10 lines of prelude Lisp each. Needs variadic macro params (rest args), which we have.
-
-### Additional Prelude Functions (Clojure-inspired)
-
-These are all pure Lisp — no C changes needed:
-
-| Function | Definition | Notes |
-|----------|-----------|-------|
-| `partial` | `(lambda rest (apply f (append args rest)))` | Partial function application |
-| `iterate` | `(lazy-cons x (lambda () (iterate f (f x))))` | Needs lazy-cons |
-| `take-while` | Eager version: recurse while pred holds | |
-| `drop-while` | Skip while pred holds, return rest | |
-| `group-by` | Build alist of key→list via reduce | |
-| `frequencies` | Count occurrences via reduce + alist | |
-| `juxt` | `((juxt f g) x)` => `(list (f x) (g x))` | |
-| `doseq` | Macro over for-each | |
-| `dotimes` | Macro over range + for-each | |
-
-### Structural Sharing
-
-Cons lists already share structure naturally:
-```lisp
-(define a (list 3 4 5))
-(define b (cons 2 a))   ;; shares a's tail
-(define c (cons 1 a))   ;; also shares a's tail
-```
-
-Clojure's persistent vectors and maps use hash array mapped tries (HAMTs) for O(log32 n) updates sharing ~97% of old structure. On tml24c this would require:
-- 32-way branching nodes (~32 heap cells each)
-- Hash function for map keys
-- Bitmap-indexed node compression
-- ~500+ lines of C
-
-With 4096 heap cells, a persistent vector of 100 elements would consume ~130 cells. Feasible but tight. Lower priority than `set!`, lazy seqs, and threading macros.
-
-### Recommended Implementation Order
-
-1. **`set!`** — tiny C change, unlocks memoization + atoms + mutation
-2. **`->` / `->>`** — pure Lisp macros, big readability win
-3. **Lazy sequences** — prelude definitions, memoized version needs `set!`
-4. **`partial` + utility functions** — one-liners
-5. **Multi-methods** — pure Lisp, already designed
-6. **Persistent data structures** — significant effort, low priority
-
-### Interactive Terminal Improvements
-
-The `cor24-run --terminal` mode enables real-time REPL interaction. Potential enhancements:
-- Line editing (backspace, cursor movement) — requires terminal escape sequence handling in the tml24c REPL
-- History (up/down arrow) — significant effort on a bare-metal target
-- Multi-line expression input — detect unbalanced parens and continue reading
+See also: `docs/futures.md` (numeric types, data structures), `docs/scheme-todo-items.md` (R7RS compatibility)
