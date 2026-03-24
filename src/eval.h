@@ -25,6 +25,7 @@ int sym_quasiquote;
 int sym_unquote;
 int sym_unquote_splicing;
 int sym_set;
+int gensym_counter;
 /* Primitive IDs */
 #define PRIM_ADD     0
 #define PRIM_SUB     1
@@ -62,6 +63,11 @@ int sym_set;
 #define PRIM_HEAP_SIZE  33
 #define PRIM_NUM_TO_STR 34
 #define PRIM_FNQP       35
+#define PRIM_EVAL       36
+#define PRIM_MACEXPAND  37
+#define PRIM_GENSYM     38
+#define PRIM_SYM_TO_STR 39
+#define PRIM_STR_TO_SYM 40
 
 /* --- Extended object accessors --- */
 
@@ -297,6 +303,56 @@ int apply_primitive(int id, int args) {
     if (id == PRIM_FNQP) {
         if (IS_EXTENDED(a) && ext_type(a) == ETYPE_CLOSURE) return T_VAL;
         if (IS_EXTENDED(a) && ext_type(a) == ETYPE_PRIMITIVE) return T_VAL;
+        return NIL_VAL;
+    }
+    if (id == PRIM_EVAL) {
+        return eval(a, global_env);
+    }
+    if (id == PRIM_MACEXPAND) {
+        /* (macroexpand '(when x y)) — expand macro call once without eval */
+        if (!IS_CONS(a)) return a;
+        int mhead = car(a);
+        int margs = cdr(a);
+        if (IS_SYMBOL(mhead)) {
+            int fn = env_lookup(mhead, global_env);
+            if (IS_EXTENDED(fn) && ext_type(fn) == ETYPE_MACRO) {
+                int mac_env = env_bind(closure_params(fn), margs, closure_env(fn));
+                return eval(closure_body(fn), mac_env);
+            }
+        }
+        return a;  /* not a macro call, return as-is */
+    }
+    if (id == PRIM_GENSYM) {
+        /* Generate a unique symbol: _g0, _g1, _g2, ... */
+        char buf[12];
+        buf[0] = '_';
+        buf[1] = 'g';
+        int n = gensym_counter;
+        gensym_counter = gensym_counter + 1;
+        int i = 2;
+        if (n == 0) { buf[i] = '0'; i = i + 1; }
+        else {
+            /* write digits reversed, then reverse */
+            int start = i;
+            while (n > 0) { buf[i] = '0' + n % 10; n = n / 10; i = i + 1; }
+            int j = start;
+            int k = i - 1;
+            while (j < k) { char c = buf[j]; buf[j] = buf[k]; buf[k] = c; j = j + 1; k = k - 1; }
+        }
+        buf[i] = 0;
+        return intern(buf);
+    }
+    if (id == PRIM_SYM_TO_STR) {
+        if (IS_SYMBOL(a)) {
+            char *name = sym_name(a);
+            return make_string(name, str_len(name));
+        }
+        return make_string("", 0);
+    }
+    if (id == PRIM_STR_TO_SYM) {
+        if (is_string(a)) {
+            return intern(string_data(a));
+        }
         return NIL_VAL;
     }
     if (id == PRIM_NUM_TO_STR) {
@@ -590,4 +646,10 @@ void eval_init() {
     register_prim("heap-size", PRIM_HEAP_SIZE);
     register_prim("number->string", PRIM_NUM_TO_STR);
     register_prim("fn?", PRIM_FNQP);
+    register_prim("eval", PRIM_EVAL);
+    register_prim("macroexpand", PRIM_MACEXPAND);
+    register_prim("gensym", PRIM_GENSYM);
+    register_prim("symbol->string", PRIM_SYM_TO_STR);
+    register_prim("string->symbol", PRIM_STR_TO_SYM);
+    gensym_counter = 0;
 }

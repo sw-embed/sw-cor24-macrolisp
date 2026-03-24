@@ -1,0 +1,44 @@
+;; metaprogramming.l24 -- macroexpand, gensym, eval, symbol/string conversion
+;;
+;; Run with: just eval demos/metaprogramming.l24
+
+;; === macroexpand: see what macros produce ===
+
+(macroexpand '(when (< x 0) (println 'negative)))
+(macroexpand '(let ((a 1) (b 2)) (+ a b)))
+(macroexpand '(cond ((= n 0) 'zero) ((= n 1) 'one) (t 'other)))
+;; Note: -> and ->> are in the full prelude, not standard
+;; (macroexpand '(-> x (f a)))  ; use: just eval-full
+
+;; === gensym: unique symbols for hygienic helpers ===
+
+(gensym)
+(gensym)
+(eq? (gensym) (gensym))
+
+;; Use gensym in a macro to avoid variable capture
+(defmacro safe-or (a b)
+  (let ((gs (gensym)))
+    `(let ((,gs ,a)) (if ,gs ,gs ,b))))
+(safe-or 42 99)
+(safe-or nil 99)
+
+;; === eval: execute constructed code ===
+
+(eval '(+ 1 2))
+(eval (list '* 6 7))
+
+;; Build and eval a function call dynamically
+(define make-call (lambda (op args) (cons op args)))
+(eval (make-call '+ '(10 20 )))
+
+;; === symbol->string / string->symbol ===
+
+(symbol->string 'hello)
+(string->symbol "world")
+(eq? (string->symbol "foo") 'foo)
+
+;; Build a symbol name programmatically
+(string->symbol (string-append "my-" "var"))
+
+(exit)
