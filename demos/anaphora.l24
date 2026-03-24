@@ -1,0 +1,43 @@
+;; anaphora.l24 -- Anaphoric macros (exploit unhygienic defmacro)
+;;
+;; Anaphoric macros bind 'it' to the result of a test expression,
+;; available in the body. Only possible with unhygienic macros.
+;;
+;; Run with: just eval demos/anaphora.l24
+
+;; aif: anaphoric if — binds 'it' to the test result
+(defmacro aif (test then else) `(let ((it ,test)) (if it ,then ,else)))
+
+;; awhen: anaphoric when — body can use 'it'
+(defmacro awhen (test body) `(let ((it ,test)) (if it ,body nil)))
+
+;; aand: anaphoric and — each clause can refer to previous as 'it'
+(defmacro aand (a b) `(let ((it ,a)) (if it ,b nil)))
+
+;; acond: first matching clause binds 'it'
+(defmacro acond (c1 c2) `(let ((it ,(car c1))) (if it ,(cadr c1) (let ((it ,(car c2))) (if it ,(cadr c2) nil)))))
+
+;; --- Demos ---
+
+;; aif: use the test result without recomputing
+(aif (+ 20 22) (println it) (println 'nope))
+
+;; aif: nil test takes else branch
+(aif nil (println 'yes) (println 'no))
+
+;; awhen: only runs body if test is truthy
+(awhen (car (list 42 99)) (println it))
+(awhen nil (println 'never))
+
+;; aand: chain computations, each sees previous as 'it'
+(aand (+ 1 2) (+ it 10))
+
+;; Practical: find and use — no redundant computation
+(define data (list (cons 'name 'alice) (cons 'age 30)))
+(awhen (assoc 'name data) (println (cdr it)))
+(awhen (assoc 'email data) (println (cdr it)))
+
+;; Nested: aif inside aif
+(aif (assoc 'age data) (aif (> (cdr it) 18) 'adult 'minor) 'unknown)
+
+(exit)
