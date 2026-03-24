@@ -10,7 +10,7 @@
  * String data is stored in a flat char buffer (str_pool).
  */
 
-#define STR_POOL_SIZE 2048
+#define STR_POOL_SIZE 8192
 
 char str_pool[STR_POOL_SIZE];
 int str_pool_next;

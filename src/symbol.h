@@ -2,8 +2,8 @@
 
 /* symbol.h -- Symbol interning */
 
-#define MAX_SYMBOLS 256
-#define NAME_POOL_SIZE 2048
+#define MAX_SYMBOLS 512
+#define NAME_POOL_SIZE 4096
 
 char name_pool[NAME_POOL_SIZE];
 int name_pool_next;

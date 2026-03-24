@@ -40,7 +40,7 @@
 #define T_VAL     MAKE_SYMBOL(1)
 #define IS_NIL(v) ((v) == NIL_VAL)
 
-#define HEAP_SIZE 4096
+#define HEAP_SIZE 32768
 
 /* Extended object type tags */
 #define ETYPE_CLOSURE   MAKE_FIXNUM(1)
