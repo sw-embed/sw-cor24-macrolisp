@@ -144,9 +144,9 @@ int read_list() {
 int read_string() {
     /* skip opening '"' */
     read_ptr = read_ptr + 1;
-    char buf[64];
+    char buf[120];
     int i = 0;
-    while (*read_ptr && *read_ptr != 34 && i < 63) {
+    while (*read_ptr && *read_ptr != 34 && i < 119) {
         if (*read_ptr == '\\') {
             read_ptr = read_ptr + 1;
             if (*read_ptr == 'n') { buf[i] = '\n'; }
