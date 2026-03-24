@@ -1,0 +1,114 @@
+#!/usr/bin/env bash
+# tml24c — Tiny Macro Lisp for COR24
+# Main entry point. Wraps just recipes with -h/--help, -V/--version.
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+PROJECT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
+
+cd "$PROJECT_DIR"
+
+# Build info (generated at script time, not build time)
+VERSION="0.1.0"
+COPYRIGHT="Copyright (c) 2026 Michael A Wright"
+LICENSE="MIT License"
+SHA=$(git -C "$PROJECT_DIR" rev-parse --short HEAD 2>/dev/null || echo "unknown")
+BUILD_TIME=$(git -C "$PROJECT_DIR" log -1 --format='%aI' 2>/dev/null || echo "unknown")
+
+version() {
+    echo "tml24c $VERSION ($SHA $BUILD_TIME)"
+    echo "$COPYRIGHT"
+    echo "$LICENSE"
+    echo ""
+    echo "Preludes:"
+    echo "  minimal  — 6 defs (comparison, predicates)"
+    echo "  standard — ~50 defs (core Lisp)"
+    echo "  full     — ~90 defs (+ lazy, threading, anaphora)"
+    echo "  bare     — none (custom .l24 preludes)"
+}
+
+usage() {
+    echo "tml24c — Tiny Macro Lisp for COR24"
+    echo ""
+    echo "Usage:"
+    echo "  tml24c [options]                    Interactive REPL (standard prelude)"
+    echo "  tml24c eval <file.l24>              Evaluate a file"
+    echo "  tml24c run [minimal|standard|full]  REPL with chosen prelude"
+    echo "  tml24c eval-full <file.l24>         Evaluate with full prelude"
+    echo "  tml24c custom <prelude.l24>         REPL with custom prelude"
+    echo "  tml24c demo <name>                  Run a demo (bottles, bottles2, bottles4, blink)"
+    echo "  tml24c test                         Run test suite"
+    echo "  tml24c build [target]               Build (minimal|standard|full|bare|test)"
+    echo ""
+    echo "Options:"
+    echo "  -h, --help       Show this help"
+    echo "  -V, --version    Show version, copyright, and build info"
+    echo ""
+    echo "Examples:"
+    echo "  tml24c                              Start standard REPL"
+    echo "  tml24c eval demos/strings.l24       Evaluate strings demo"
+    echo "  tml24c run full                     REPL with full prelude"
+    echo "  tml24c demo bottles                 99 Bottles of Beer"
+    echo "  tml24c custom prelude/standard.l24  REPL with file-based prelude"
+    echo ""
+    echo "Documentation: docs/usage.md, docs/demos.md"
+    echo "Source: https://github.com/sw-vibe-coding/tml24c"
+}
+
+case "${1:-}" in
+    -h|--help)
+        usage
+        ;;
+    -V|--version)
+        version
+        ;;
+    ""|run)
+        PRELUDE="${2:-standard}"
+        case "$PRELUDE" in
+            minimal)  just run-minimal ;;
+            standard) just run ;;
+            full)     just run-full ;;
+            *)        echo "Unknown prelude: $PRELUDE (use minimal, standard, or full)"; exit 1 ;;
+        esac
+        ;;
+    eval)
+        [[ -z "${2:-}" ]] && { echo "Usage: tml24c eval <file.l24>"; exit 1; }
+        just eval "$2"
+        ;;
+    eval-full)
+        [[ -z "${2:-}" ]] && { echo "Usage: tml24c eval-full <file.l24>"; exit 1; }
+        just eval-full "$2"
+        ;;
+    custom)
+        [[ -z "${2:-}" ]] && { echo "Usage: tml24c custom <prelude.l24>"; exit 1; }
+        just run-custom "$2"
+        ;;
+    demo)
+        case "${2:-}" in
+            bottles)  just demo-bottles ;;
+            bottles2) just demo-bottles2 ;;
+            bottles4) just demo-bottles4 ;;
+            blink)    just demo-blink ;;
+            *)        echo "Unknown demo: ${2:-} (bottles, bottles2, bottles4, blink)"; exit 1 ;;
+        esac
+        ;;
+    test)
+        just test
+        ;;
+    build)
+        TARGET="${2:-standard}"
+        case "$TARGET" in
+            minimal)  just build-minimal ;;
+            standard) just build-standard ;;
+            full)     just build-full ;;
+            bare)     just build-bare ;;
+            test)     just build ;;
+            *)        echo "Unknown target: $TARGET"; exit 1 ;;
+        esac
+        ;;
+    *)
+        echo "Unknown command: $1"
+        echo "Run 'tml24c --help' for usage."
+        exit 1
+        ;;
+esac
