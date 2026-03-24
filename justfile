@@ -51,6 +51,10 @@ demo-blink: build-repl
 demo-bottles: build-repl
     grep -v '^;;' demos/bottles.l24 | {{cor24_run}} --run build/repl.s --terminal --speed 0 -n 200000000
 
+# 99 Bottles of Beer (trampoline/mutual recursion version)
+demo-bottles2: build-repl
+    grep -v '^;;' demos/bottles2.l24 | {{cor24_run}} --run build/repl.s --terminal --speed 0 -n 200000000
+
 # Clean build artifacts
 clean:
     rm -rf build
