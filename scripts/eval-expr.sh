@@ -11,5 +11,5 @@ PROJECT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 cd "$PROJECT_DIR"
 just build-repl
 
-echo "$*" | cor24-run --run build/repl.s --terminal --speed 0 -n 10000000 2>&1 | \
-    grep -v -E '^Assembled |Executed [0-9]+ instructions' | sed 's/^[> ]*//' | sed '/^$/d'
+echo "$*" | cor24-run --run build/repl.s --terminal --speed 0 -n 200000000 2>&1 | \
+    grep -v -E '^Assembled |Executed [0-9]+ instructions|^\[CPU'

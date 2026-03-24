@@ -50,6 +50,5 @@ if [[ $VERBOSE -eq 1 ]]; then
     eval "$INPUT_CMD" | cor24-run --run build/repl.s --terminal --speed 0 -n "$MAX_INSN" 2>&1
 else
     eval "$INPUT_CMD" | cor24-run --run build/repl.s --terminal --speed 0 -n "$MAX_INSN" 2>&1 | \
-        grep -v -E '^Assembled |Executed [0-9]+ instructions' | \
-        python3 scripts/strip-prompts.py
+        grep -v -E '^Assembled |Executed [0-9]+ instructions|^\[CPU'
 fi

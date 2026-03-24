@@ -41,8 +41,7 @@ test: build
 eval file: build-repl
     #!/usr/bin/env bash
     grep -v '^;;' "{{file}}" | {{cor24_run}} --run build/repl.s --terminal --speed 0 -n 200000000 2>&1 | \
-        grep -v -E '^Assembled |Executed [0-9]+ instructions' | \
-        python3 scripts/strip-prompts.py
+        grep -v -E '^Assembled |Executed [0-9]+ instructions|^\[CPU'
 
 # Blink D2 LED demo (Ctrl-] to exit)
 demo-blink: build-repl
