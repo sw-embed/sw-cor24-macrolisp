@@ -1,0 +1,19 @@
+;; variadic.l24 -- Rest parameters demo
+
+;; Bare symbol parameter: collects all args
+(define my-list (lambda args args))
+(my-list 1 2 3 4 5)
+
+;; Dotted pair: fixed params + rest
+(define head-and-rest (lambda (h . rs) (list 'head h 'rest rs)))
+(head-and-rest 1 2 3 4)
+
+;; Variadic sum
+(define sum-all (lambda args (reduce + 0 args)))
+(sum-all 1 2 3 4 5)
+
+;; First arg is label, rest are values
+(define show (lambda (label . vals) (begin (print label) (print ': ) (println vals))))
+(show 'nums 1 2 3)
+
+(exit)

@@ -123,10 +123,14 @@ int env_lookup(int sym, int env) {
 }
 
 int env_bind(int params, int args, int env) {
-    while (!IS_NIL(params)) {
+    while (IS_CONS(params)) {
         env = env_extend(car(params), car(args), env);
         params = cdr(params);
         args = cdr(args);
+    }
+    /* Rest arg: (a b . rest) or bare symbol */
+    if (IS_SYMBOL(params)) {
+        env = env_extend(params, args, env);
     }
     return env;
 }
