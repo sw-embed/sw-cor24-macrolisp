@@ -1,9 +1,9 @@
 ;; scheme.l24 -- Scheme-flavored Lisp demo
 ;;
 ;; Shows: #t/#f booleans, cond with else, let/let*, define-fn shorthand, equal?, boolean?, list?, even?/odd?, factorial, tail-recursive sum
-;; Prelude: custom (prelude/scheme.l24)
+;; Prelude: scheme (compiled)
 ;; Stack: 3 KB (default)
-;; Run: just eval-custom demos/scheme.l24 prelude/scheme.l24
+;; Run: just eval-scheme demos/scheme.l24
 
 (display "Booleans: ")
 (display #t)

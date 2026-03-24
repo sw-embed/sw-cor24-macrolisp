@@ -1,0 +1,72 @@
+#pragma once
+
+/* prelude-scheme.h -- Scheme-flavored prelude.
+ * R7RS-inspired naming conventions on tml24c. */
+
+void load_prelude() {
+    /* Core list operations */
+    eval_str("(define map (lambda (f lst) (if (null? lst) lst (cons (f (car lst)) (map f (cdr lst))))))");
+    eval_str("(define filter (lambda (p lst) (if (null? lst) lst (if (p (car lst)) (cons (car lst) (filter p (cdr lst))) (filter p (cdr lst))))))");
+    eval_str("(define for-each (lambda (f lst) (if (null? lst) (begin) (begin (f (car lst)) (for-each f (cdr lst))))))");
+    eval_str("(define length (lambda (lst) (if (null? lst) 0 (+ 1 (length (cdr lst))))))");
+    eval_str("(define append (lambda (a b) (if (null? a) b (cons (car a) (append (cdr a) b)))))");
+    eval_str("(define reverse (lambda (lst) (define go (lambda (in out) (if (null? in) out (go (cdr in) (cons (car in) out))))) (go lst '())))");
+    eval_str("(define list-ref (lambda (lst n) (if (= n 0) (car lst) (list-ref (cdr lst) (- n 1)))))");
+    eval_str("(define reduce (lambda (f init lst) (if (null? lst) init (reduce f (f init (car lst)) (cdr lst)))))");
+
+    /* Accessors */
+    eval_str("(define cadr (lambda (x) (car (cdr x))))");
+    eval_str("(define caar (lambda (x) (car (car x))))");
+    eval_str("(define cdar (lambda (x) (cdr (car x))))");
+    eval_str("(define caddr (lambda (x) (car (cdr (cdr x)))))");
+
+    /* Scheme predicates */
+    eval_str("(define boolean? (lambda (x) (if (eq? x t) t (null? x))))");
+    eval_str("(define list? (lambda (x) (if (null? x) t (if (pair? x) (list? (cdr x)) nil))))");
+    eval_str("(define equal? (lambda (a b) (if (eq? a b) t (if (pair? a) (if (pair? b) (if (equal? (car a) (car b)) (equal? (cdr a) (cdr b)) nil) nil) (if (string? a) (if (string? b) (string=? a b) nil) nil)))))");
+    eval_str("(define zero? (lambda (n) (= n 0)))");
+    eval_str("(define even? (lambda (n) (= (% n 2) 0)))");
+    eval_str("(define odd? (lambda (n) (not (= (% n 2) 0))))");
+    eval_str("(define positive? (lambda (n) (< 0 n)))");
+    eval_str("(define negative? (lambda (n) (< n 0)))");
+
+    /* Numeric */
+    eval_str("(define abs (lambda (n) (if (< n 0) (- 0 n) n)))");
+    eval_str("(define max (lambda (a b) (if (< a b) b a)))");
+    eval_str("(define min (lambda (a b) (if (< a b) a b)))");
+    eval_str("(define modulo %)");
+    eval_str("(define remainder %)");
+
+    /* Scheme macros */
+    eval_str("(defmacro let (bindings body) `((lambda ,(map car bindings) ,body) ,@(map cadr bindings)))");
+    eval_str("(define let*-expand (lambda (bindings body) (if (null? (cdr bindings)) `(let (,(car bindings)) ,body) `(let (,(car bindings)) ,(let*-expand (cdr bindings) body)))))");
+    eval_str("(defmacro let* (bindings body) (let*-expand bindings body))");
+    eval_str("(define cond-expand (lambda (clauses) (if (null? clauses) nil (if (eq? (caar clauses) 'else) (cadr (car clauses)) `(if ,(caar clauses) ,(cadr (car clauses)) ,(cond-expand (cdr clauses)))))))");
+    eval_str("(defmacro cond clauses (cond-expand clauses))");
+    eval_str("(defmacro and (a b) `(if ,a ,b nil))");
+    eval_str("(defmacro or (a b) `(if ,a ,a ,b))");
+    eval_str("(defmacro when (test body) `(if ,test ,body (begin)))");
+    eval_str("(defmacro unless (test body) `(if ,test (begin) ,body))");
+
+    /* define-fn: (define-fn (f x) body) shorthand */
+    eval_str("(defmacro define-fn (sig body) `(define ,(car sig) (lambda ,(cdr sig) ,body)))");
+
+    /* Combinators */
+    eval_str("(define identity (lambda (x) x))");
+    eval_str("(define compose (lambda (f g) (lambda (x) (f (g x)))))");
+
+    /* String utilities */
+    eval_str("(define ->str (lambda (x) (cond ((string? x) x) ((number? x) (number->string x)) (else \"\"))))");
+    eval_str("(define str2 (lambda (a b) (string-append (->str a) (->str b))))");
+    eval_str("(define str (lambda args (reduce str2 \"\" args)))");
+
+    /* Metaprogramming */
+    eval_str("(define macroexpand (lambda (form) (let ((expanded (macroexpand-1 form))) (if (eq? expanded form) form (macroexpand expanded)))))");
+
+    /* Comments */
+    eval_str("(defmacro comment rest nil)");
+
+    /* Association lists */
+    eval_str("(define assoc (lambda (key alist) (if (null? alist) nil (if (eq? key (caar alist)) (car alist) (assoc key (cdr alist))))))");
+    eval_str("(define get (lambda (key alist default) (if (null? alist) default (if (eq? key (caar alist)) (cdar alist) (get key (cdr alist) default)))))");
+}

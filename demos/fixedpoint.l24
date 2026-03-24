@@ -1,0 +1,54 @@
+;; fixedpoint.l24 -- Fixed-point decimal arithmetic
+;;
+;; Shows: Scaled-integer arithmetic for currency and measurements. No C changes needed.
+;; Prelude: standard
+;; Stack: 3 KB (default)
+;; Run: just eval demos/fixedpoint.l24
+
+; === Currency: store cents, display as dollars ===
+
+(define $show (lambda (c) (begin (display "$") (display (number->string (/ c 100))) (display ".") (if (< (% c 100) 10) (display "0") nil) (display (number->string (% c 100))))))
+
+; Prices in cents
+(define coffee 450)
+(define tax-rate 9)
+
+(begin (display "Coffee: ") ($show coffee) (newline))
+
+; Tax: 450 * 9 / 100 = 40 cents
+(define tax (/ (* coffee tax-rate) 100))
+(begin (display "Tax:    ") ($show tax) (newline))
+
+(define total (+ coffee tax))
+(begin (display "Total:  ") ($show total) (newline))
+
+; Cart of items
+(define cart (list 450 1299 350))
+(define cart-total (reduce + 0 cart))
+(begin (display "Cart:   ") ($show cart-total) (newline))
+
+; === Rational numbers: exact fractions ===
+
+(define gcd (lambda (a b) (if (= b 0) a (gcd b (% a b)))))
+(define make-rat (lambda (n d) (let ((g (gcd (abs n) (abs d)))) (cons (/ n g) (/ d g)))))
+(define rat+ (lambda (a b) (make-rat (+ (* (car a) (cdr b)) (* (car b) (cdr a))) (* (cdr a) (cdr b)))))
+(define rat* (lambda (a b) (make-rat (* (car a) (car b)) (* (cdr a) (cdr b)))))
+(define rat-show (lambda (r) (begin (display (number->string (car r))) (display "/") (display (number->string (cdr r))))))
+
+; 1/3 + 1/6 = 1/2
+(define a (make-rat 1 3))
+(define b (make-rat 1 6))
+(begin (display "1/3 + 1/6 = ") (rat-show (rat+ a b)) (newline))
+
+; 2/3 * 3/4 = 1/2
+(begin (display "2/3 * 3/4 = ") (rat-show (rat* (make-rat 2 3) (make-rat 3 4))) (newline))
+
+; === Sensor readings: millivolts ===
+
+(define mv-show (lambda (mv) (begin (display (number->string (/ mv 1000))) (display ".") (if (< (% mv 1000) 100) (display "0") nil) (if (< (% mv 1000) 10) (display "0") nil) (display (number->string (% mv 1000))) (display "V"))))
+
+(define readings (list 3302 3295 3310 3298))
+(define avg (/ (reduce + 0 readings) (length readings)))
+(begin (display "Sensor avg: ") (mv-show avg) (newline))
+
+(exit)

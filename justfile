@@ -23,6 +23,10 @@ build-full:
     mkdir -p build
     {{tc24r}} src/repl-full.c -o build/repl-full.s
 
+build-scheme:
+    mkdir -p build
+    {{tc24r}} src/repl-scheme.c -o build/repl-scheme.s
+
 build-bare:
     mkdir -p build
     {{tc24r}} src/repl-bare.c -o build/repl-bare.s
@@ -36,6 +40,10 @@ run-minimal: build-minimal
 # Interactive REPL with standard prelude (default)
 run: build-standard
     {{cor24_run}} --run build/repl-standard.s --terminal --echo --speed 0
+
+# Interactive REPL with Scheme prelude
+run-scheme: build-scheme
+    {{cor24_run}} --run build/repl-scheme.s --terminal --echo --speed 0
 
 # Interactive REPL with full prelude
 run-full: build-full
@@ -53,6 +61,12 @@ run-custom prelude: build-bare
 eval file: build-standard
     #!/usr/bin/env bash
     grep -v '^;;' "{{file}}" | {{cor24_run}} --run build/repl-standard.s --terminal --speed 0 -n 500000000 2>&1 | \
+        grep -v -E '^Assembled |Executed [0-9]+ instructions|^\[CPU'
+
+# Evaluate with Scheme prelude
+eval-scheme file: build-scheme
+    #!/usr/bin/env bash
+    grep -v '^;;' "{{file}}" | {{cor24_run}} --run build/repl-scheme.s --terminal --speed 0 -n 500000000 2>&1 | \
         grep -v -E '^Assembled |Executed [0-9]+ instructions|^\[CPU'
 
 # Evaluate with full prelude
