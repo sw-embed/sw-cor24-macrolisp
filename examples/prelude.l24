@@ -1,0 +1,16 @@
+;; prelude.l24 -- standard library (loaded by default via src/repl.c)
+;;
+;; These definitions are compiled into the REPL binary.
+;; To add custom definitions at startup, create your own prelude
+;; and load it before your code:
+;;
+;;   cat myprelude.l24 mycode.l24 | cor24-run --run build/repl.s --terminal --speed 0
+;;   ./scripts/load-eval.sh myprelude.l24  # then use the defined functions
+;;
+;; Built-in prelude provides:
+;;
+;; List operations:  map filter foldr length append reverse nth
+;; List accessors:   cadr caddr caar cdar
+;; Comparison:       > >= <=
+;; Numeric:          zero? positive? negative? abs min max
+;; Macros:           when unless

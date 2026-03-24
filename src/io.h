@@ -18,8 +18,13 @@ void puts_str(char *s) {
 }
 
 int getc_uart() {
-    while (!(*(char *)UART_STATUS & 0x02)) {}
+    while (!(*(char *)UART_STATUS & 0x01)) {}  /* bit 0: RX data ready */
     return *(char *)UART_DATA;
+}
+
+void halt() {
+    asm("_user_halt:");
+    asm("bra _user_halt");
 }
 
 int read_line(char *buf, int max) {
@@ -28,6 +33,10 @@ int read_line(char *buf, int max) {
         int ch = getc_uart();
         if (ch == '\n' || ch == '\r') {
             break;
+        }
+        if (ch == 4) {
+            /* Ctrl-D: EOF */
+            return -1;
         }
         buf[i] = ch;
         i = i + 1;

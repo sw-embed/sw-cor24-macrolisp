@@ -275,3 +275,36 @@ This should work naturally if lambda captures the current environment.
 | **Total** | **~1100** |
 
 Plus ~100 lines of Lisp for stdlib.
+
+---
+
+## Future Considerations
+
+### Configurable Prelude
+
+The standard library prelude (map, filter, foldr, reverse, abs, when, unless, etc.) is currently compiled into `src/repl.c` as C string literals evaluated at startup (~800K instructions overhead).
+
+**Options to explore:**
+
+1. **No-prelude build** — A `src/bare-repl.c` that skips `load_prelude()`. Useful for profiling, minimal footprint, or when the user wants full control over what's loaded. Would add a `make run-bare` target.
+
+2. **Selectable prelude at eval time** — The `load-eval.sh` script already supports `-p prelude.l24` to prepend a custom prelude file via UART before the main code. This layers on top of the built-in prelude. For a fully custom prelude (replacing the built-in), combine with the bare build.
+
+3. **tc24r `-D` support** — If the compiler gains `-D` preprocessor defines, a single `src/repl.c` with `#ifdef PRELUDE` guards would replace the need for separate source files.
+
+4. **Prelude-as-file** — Move the prelude definitions from C strings to a `.l24` file that gets embedded at compile time (e.g., via `xxd -i` or a build step that generates a C header from the file). This makes the prelude editable without touching C code.
+
+### Quasiquote and Splicing
+
+The plan calls for quasiquote (`` ` ``), unquote (`,`), and splice (`,@`) support. These are not yet implemented. Adding them would make macro authoring much more ergonomic — the current `(list 'if cond body)` pattern is verbose for complex macros.
+
+### Strings
+
+Phase 4 (strings) is not yet implemented. String support would improve error messages and enable practical I/O programs.
+
+### Interactive Terminal Improvements
+
+The `cor24-run --terminal` mode enables real-time REPL interaction. Potential enhancements:
+- Line editing (backspace, cursor movement) — requires terminal escape sequence handling in the tml24c REPL
+- History (up/down arrow) — significant effort on a bare-metal target
+- Multi-line expression input — detect unbalanced parens and continue reading

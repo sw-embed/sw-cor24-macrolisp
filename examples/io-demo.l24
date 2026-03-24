@@ -1,0 +1,20 @@
+;; io-demo.l24 -- Memory-mapped I/O demo for COR24-TB
+
+;; Hex literals
+#xFF
+#x2A
+
+;; Read UART status register
+(peek IO-UART-STATUS)
+
+;; Set LEDs to binary pattern
+(set-leds #xAA)
+(set-leds #x55)
+(set-leds 0)
+
+;; Check S2 button
+(s2-pressed?)
+
+;; Direct peek/poke
+(poke #xFF0000 42)
+(peek #xFF0000)

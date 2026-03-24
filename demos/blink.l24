@@ -1,0 +1,9 @@
+;; blink.l24 -- Blink D2 (LED bit 0) on COR24-TB
+;;
+;; Run with: make demo-blink
+;; Exit with: Ctrl-]
+;;
+;; Timing calibrated for --speed 500000.
+
+(define blink (lambda (on-ms off-ms) (begin (set-leds 1) (println 'on) (delay on-ms) (set-leds 0) (println 'off) (delay off-ms) (blink on-ms off-ms))))
+(blink 1000 1000)

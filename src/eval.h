@@ -21,7 +21,6 @@ int sym_define;
 int sym_lambda;
 int sym_defmacro;
 int sym_begin;
-
 /* Primitive IDs */
 #define PRIM_ADD     0
 #define PRIM_SUB     1
@@ -41,6 +40,12 @@ int sym_begin;
 #define PRIM_NOT    15
 #define PRIM_PRINT  16
 #define PRIM_NUMP   17
+#define PRIM_EXIT   18
+#define PRIM_PEEK   19
+#define PRIM_POKE   20
+#define PRIM_DELAY  21
+#define PRIM_PRINTLN 22
+#define PRIM_NEWLINE 23
 
 /* --- Extended object accessors --- */
 
@@ -183,8 +188,39 @@ int apply_primitive(int id, int args) {
         print_val(a);
         return a;
     }
+    if (id == PRIM_PRINTLN) {
+        print_val(a);
+        putc_uart('\n');
+        return a;
+    }
+    if (id == PRIM_NEWLINE) {
+        putc_uart('\n');
+        return NIL_VAL;
+    }
     if (id == PRIM_NUMP) {
         if (IS_FIXNUM(a)) return T_VAL;
+        return NIL_VAL;
+    }
+    if (id == PRIM_EXIT) {
+        puts_str("Bye.\n");
+        halt();
+    }
+    if (id == PRIM_PEEK) {
+        return MAKE_FIXNUM(*(char *)FIXNUM_VAL(a));
+    }
+    if (id == PRIM_POKE) {
+        *(char *)FIXNUM_VAL(a) = FIXNUM_VAL(b);
+        return b;
+    }
+    if (id == PRIM_DELAY) {
+        /* Spin-loop delay calibrated for --speed 500000 (500K IPS).
+         * The loop body compiles to ~10 instructions on COR24.
+         * 500 instructions/ms ÷ 10 instructions/iter = 50 iters/ms. */
+        int ms = FIXNUM_VAL(a);
+        int iters = ms * 50;
+        while (iters > 0) {
+            iters = iters - 1;
+        }
         return NIL_VAL;
     }
 
@@ -330,4 +366,10 @@ void eval_init() {
     register_prim("not", PRIM_NOT);
     register_prim("print", PRIM_PRINT);
     register_prim("number?", PRIM_NUMP);
+    register_prim("exit", PRIM_EXIT);
+    register_prim("peek", PRIM_PEEK);
+    register_prim("poke", PRIM_POKE);
+    register_prim("delay", PRIM_DELAY);
+    register_prim("println", PRIM_PRINTLN);
+    register_prim("newline", PRIM_NEWLINE);
 }
