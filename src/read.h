@@ -9,6 +9,10 @@
  *   - Quote shorthand: 'x -> (quote x)
  */
 
+/* Forward declarations from gc.h */
+int gc_protect(int val);
+void gc_unprotect(int n);
+
 char *read_ptr;
 
 int is_whitespace(int ch) {
@@ -91,8 +95,9 @@ int read_list() {
         return NIL_VAL;
     }
 
-    /* read first element */
+    /* read first element — protect from GC during cons */
     int first = read_expr();
+    gc_protect(first);
     skip_whitespace();
 
     /* check for dotted pair */
@@ -100,18 +105,18 @@ int read_list() {
         read_ptr = read_ptr + 1;
         skip_whitespace();
         int d = read_expr();
-        skip_whitespace();
-        if (*read_ptr == ')') {
-            read_ptr = read_ptr + 1;
-        }
+        gc_unprotect(1);
         return cons(first, d);
     }
 
     /* build list */
     int head = cons(first, NIL_VAL);
+    gc_unprotect(1);  /* first is now in head */
+    gc_protect(head);
     int tail = head;
     while (*read_ptr && *read_ptr != ')') {
         int elem = read_expr();
+        gc_protect(elem);
         skip_whitespace();
 
         /* check for dot after element */
@@ -119,15 +124,17 @@ int read_list() {
             read_ptr = read_ptr + 1;
             skip_whitespace();
             int d = read_expr();
-            skip_whitespace();
+            gc_unprotect(1);  /* elem */
             heap_cdr[PTR_IDX(tail)] = d;
             if (*read_ptr == ')') {
                 read_ptr = read_ptr + 1;
             }
+            gc_unprotect(1);  /* head */
             return head;
         }
 
         int cell = cons(elem, NIL_VAL);
+        gc_unprotect(1);  /* elem — now in cell */
         heap_cdr[PTR_IDX(tail)] = cell;
         tail = cell;
     }
@@ -135,13 +142,45 @@ int read_list() {
     if (*read_ptr == ')') {
         read_ptr = read_ptr + 1;
     }
+    gc_unprotect(1);  /* head */
     return head;
+}
+
+int read_string() {
+    /* skip opening '"' */
+    read_ptr = read_ptr + 1;
+    char buf[32];
+    int i = 0;
+    while (*read_ptr && *read_ptr != 34 && i < 31) {
+        if (*read_ptr == '\\') {
+            read_ptr = read_ptr + 1;
+            if (*read_ptr == 'n') { buf[i] = '\n'; }
+            else if (*read_ptr == 'r') { buf[i] = '\r'; }
+            else if (*read_ptr == 't') { buf[i] = '\t'; }
+            else if (*read_ptr == '\\') { buf[i] = '\\'; }
+            else if (*read_ptr == 34) { buf[i] = '"'; }
+            else { buf[i] = *read_ptr; }
+        } else {
+            buf[i] = *read_ptr;
+        }
+        i = i + 1;
+        read_ptr = read_ptr + 1;
+    }
+    if (*read_ptr == 34) {
+        read_ptr = read_ptr + 1;
+    }
+    buf[i] = 0;
+    return make_string(buf, i);
 }
 
 int read_expr() {
     skip_whitespace();
 
     int ch = *read_ptr;
+
+    if (ch == 34) {
+        return read_string();
+    }
 
     if (ch == '(') {
         return read_list();

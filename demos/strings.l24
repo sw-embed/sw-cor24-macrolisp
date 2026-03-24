@@ -1,0 +1,27 @@
+;; strings.l24 -- String type demo
+
+;; String literals
+"hello"
+"world"
+
+;; String length
+(string-length "hello")
+
+;; String append
+(string-append "hello " "world")
+
+;; String equality
+(string=? "abc" "abc")
+(string=? "abc" "def")
+
+;; String predicate
+(string? "test")
+(string? 42)
+
+;; Display (print without quotes)
+(display "Hello, COR24!\n")
+
+;; Strings in data structures
+(list "one" "two" "three")
+
+(exit)

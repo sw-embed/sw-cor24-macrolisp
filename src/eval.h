@@ -50,6 +50,12 @@ int sym_unquote_splicing;
 #define PRIM_PRINTLN 22
 #define PRIM_NEWLINE 23
 #define PRIM_APPLY   24
+#define PRIM_STR_LEN    25
+#define PRIM_STR_REF    26
+#define PRIM_STR_APPEND 27
+#define PRIM_STR_EQ     28
+#define PRIM_STRINGP    29
+#define PRIM_DISPLAY    30
 
 /* --- Extended object accessors --- */
 
@@ -140,8 +146,12 @@ int env_bind(int params, int args, int env) {
 int eval_list(int list, int env) {
     if (IS_NIL(list)) return NIL_VAL;
     int val = eval(car(list), env);
+    gc_protect(val);
     int rest = eval_list(cdr(list), env);
-    return cons(val, rest);
+    gc_protect(rest);
+    int result = cons(val, rest);
+    gc_unprotect(2);
+    return result;
 }
 
 int apply_primitive(int id, int args) {
@@ -234,6 +244,38 @@ int apply_primitive(int id, int args) {
     if (id == PRIM_APPLY) {
         /* (apply f args-list) */
         return apply_fn(a, b);
+    }
+    if (id == PRIM_STR_LEN) {
+        return MAKE_FIXNUM(string_len(a));
+    }
+    if (id == PRIM_STR_REF) {
+        return MAKE_FIXNUM(string_ref(a, FIXNUM_VAL(b)));
+    }
+    if (id == PRIM_STR_APPEND) {
+        return string_append(a, b);
+    }
+    if (id == PRIM_STR_EQ) {
+        if (string_equal(a, b)) return T_VAL;
+        return NIL_VAL;
+    }
+    if (id == PRIM_STRINGP) {
+        if (is_string(a)) return T_VAL;
+        return NIL_VAL;
+    }
+    if (id == PRIM_DISPLAY) {
+        /* Print string contents without quotes */
+        if (is_string(a)) {
+            char *s = string_data(a);
+            int len = string_len(a);
+            int i = 0;
+            while (i < len) {
+                putc_uart(s[i]);
+                i = i + 1;
+            }
+        } else {
+            print_val(a);
+        }
+        return NIL_VAL;
     }
 
     return NIL_VAL;
@@ -465,4 +507,10 @@ void eval_init() {
     register_prim("println", PRIM_PRINTLN);
     register_prim("newline", PRIM_NEWLINE);
     register_prim("apply", PRIM_APPLY);
+    register_prim("string-length", PRIM_STR_LEN);
+    register_prim("string-ref", PRIM_STR_REF);
+    register_prim("string-append", PRIM_STR_APPEND);
+    register_prim("string=?", PRIM_STR_EQ);
+    register_prim("string?", PRIM_STRINGP);
+    register_prim("display", PRIM_DISPLAY);
 }

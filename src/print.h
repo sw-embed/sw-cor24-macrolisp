@@ -30,6 +30,21 @@ void print_val(int v) {
     } else if (IS_CONS(v)) {
         print_list(v);
     } else if (IS_EXTENDED(v)) {
-        puts_str("#<obj>");
+        if (is_string(v)) {
+            putc_uart('"');
+            char *s = string_data(v);
+            int len = string_len(v);
+            int i = 0;
+            while (i < len) {
+                if (s[i] == '\n') { puts_str("\\n"); }
+                else if (s[i] == '"') { puts_str("\\\""); }
+                else if (s[i] == '\\') { puts_str("\\\\"); }
+                else { putc_uart(s[i]); }
+                i = i + 1;
+            }
+            putc_uart('"');
+        } else {
+            puts_str("#<obj>");
+        }
     }
 }

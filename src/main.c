@@ -4,6 +4,7 @@
 #include "io.h"
 #include "heap.h"
 #include "symbol.h"
+#include "string.h"
 #include "print.h"
 #include "read.h"
 #include "eval.h"
@@ -350,6 +351,7 @@ int main() {
     heap_init();
     gc_init();
     symbol_init();
+    string_init();
     eval_init();
     gc_enabled = 1;  /* enable GC after init */
     load_prelude();

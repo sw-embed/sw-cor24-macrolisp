@@ -4,6 +4,7 @@
 #include "io.h"
 #include "heap.h"
 #include "symbol.h"
+#include "string.h"
 #include "print.h"
 #include "read.h"
 #include "eval.h"
@@ -101,8 +102,12 @@ void repl() {
             continue;
         }
         int expr = read_str(line);
+        gc_protect(expr);
         int result = eval(expr, global_env);
+        gc_unprotect(1);
+        gc_protect(result);
         print_val(result);
+        gc_unprotect(1);
         putc_uart('\n');
         puts_str("> ");
     }
@@ -112,6 +117,7 @@ int main() {
     heap_init();
     gc_init();
     symbol_init();
+    string_init();
     eval_init();
     gc_enabled = 1;
     load_prelude();
