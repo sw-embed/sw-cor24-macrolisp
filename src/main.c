@@ -8,6 +8,7 @@
 #include "read.h"
 #include "eval.h"
 #include "gc.h"
+#include "compile.h"
 
 void test_scaffold() {
     /* Fixnum */
@@ -231,6 +232,40 @@ void test_gc() {
     puts_str("gc ok\n");
 }
 
+void test_compile() {
+    compile_init();
+
+    /* Build program as a list of expressions */
+    int e3 = cons(read_str("(+ 1 2)"), NIL_VAL);
+    int e2 = cons(read_str("(define double (lambda (n) (* n 2)))"), e3);
+    int e1 = cons(read_str("(define fact (lambda (n) (if (= n 0) 1 (* n (fact (- n 1))))))"), e2);
+    int prog = e1;
+
+    puts_str("--- compiler output ---\n");
+    compile_program(prog);
+    puts_str("--- end compiler output ---\n");
+
+    puts_str("compile ok\n");
+}
+
+void repl() {
+    char line[256];
+    puts_str("> ");
+    while (1) {
+        int len = read_line(line, 256);
+        if (len == 0) {
+            puts_str("> ");
+            /* skip empty lines */
+            continue;
+        }
+        int expr = read_str(line);
+        int result = eval(expr, global_env);
+        print_val(result);
+        putc_uart('\n');
+        puts_str("> ");
+    }
+}
+
 int main() {
     heap_init();
     gc_init();
@@ -241,5 +276,7 @@ int main() {
     test_reader();
     test_eval();
     test_gc();
+    test_compile();
+    repl();
     return 0;
 }

@@ -17,6 +17,25 @@ void puts_str(char *s) {
     }
 }
 
+int getc_uart() {
+    while (!(*(char *)UART_STATUS & 0x02)) {}
+    return *(char *)UART_DATA;
+}
+
+int read_line(char *buf, int max) {
+    int i = 0;
+    while (i < max - 1) {
+        int ch = getc_uart();
+        if (ch == '\n' || ch == '\r') {
+            break;
+        }
+        buf[i] = ch;
+        i = i + 1;
+    }
+    buf[i] = 0;
+    return i;
+}
+
 void print_int(int n) {
     if (n < 0) {
         putc_uart(45);
