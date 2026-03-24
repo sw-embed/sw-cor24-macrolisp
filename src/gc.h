@@ -17,11 +17,16 @@ int free_list;      /* head of free list (cell index), -1 = empty */
 int gc_roots[MAX_GC_ROOTS];
 int gc_root_count;
 int gc_collections;  /* statistics */
+int gc_initial_sp;   /* captured at startup for conservative stack scan */
 
 void gc_init() {
     free_list = -1;
     gc_root_count = 0;
     gc_collections = 0;
+    /* Capture initial SP — must be called early in main() */
+    asm("mov r0, sp");
+    asm("la r1, _gc_initial_sp");
+    asm("sw r0, 0(r1)");
 }
 
 /* --- Root stack for protecting temporaries --- */
@@ -80,6 +85,37 @@ void gc_sweep() {
     }
 }
 
+/* --- Conservative stack scan --- */
+
+int gc_scan_sp;  /* captured at GC time */
+
+void gc_scan_stack() {
+    /* Capture current SP */
+    asm("mov r0, sp");
+    asm("la r1, _gc_scan_sp");
+    asm("sw r0, 0(r1)");
+
+    /* Scan from current SP to initial SP, word by word (3 bytes each).
+     * Any word that looks like a valid tagged heap pointer is treated
+     * as a root. This over-retains (false positives from random ints
+     * matching heap tags) but never misses live pointers. */
+    int dist = gc_initial_sp - gc_scan_sp;
+    int words = dist / 3;
+    int addr = gc_scan_sp;
+    while (words > 0) {
+        int word = *(int *)addr;
+        int tag = word & TAG_MASK;
+        if (tag == TAG_CONS || tag == TAG_EXTENDED) {
+            int idx = word >> 2;
+            if (idx >= 0 && idx < heap_next) {
+                gc_mark_val(word);
+            }
+        }
+        addr = addr + 3;
+        words = words - 1;
+    }
+}
+
 /* --- Collect --- */
 
 void gc_collect() {
@@ -95,16 +131,15 @@ void gc_collect() {
     /* Mark from global environment */
     gc_mark_val(global_env);
 
-    /* Mark pre-interned special form symbols' values
-     * (symbols themselves are not heap-allocated, but their
-     *  bindings in global_env are already covered above) */
-
-    /* Mark root stack */
+    /* Mark explicit root stack */
     i = 0;
     while (i < gc_root_count) {
         gc_mark_val(gc_roots[i]);
         i = i + 1;
     }
+
+    /* Conservative: scan C stack for heap pointers */
+    gc_scan_stack();
 
     /* Sweep */
     gc_sweep();

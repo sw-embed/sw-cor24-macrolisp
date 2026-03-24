@@ -149,11 +149,9 @@ int read_list() {
 int read_string() {
     /* skip opening '"' */
     read_ptr = read_ptr + 1;
-    /* Note: buf[128] causes tc24r stack bug at this call depth.
-     * Keep at 32 until root cause found. See docs/bugs.md */
-    char buf[32];
+    char buf[64];
     int i = 0;
-    while (*read_ptr && *read_ptr != 34 && i < 31) {
+    while (*read_ptr && *read_ptr != 34 && i < 63) {
         if (*read_ptr == '\\') {
             read_ptr = read_ptr + 1;
             if (*read_ptr == 'n') { buf[i] = '\n'; }
