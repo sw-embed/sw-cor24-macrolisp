@@ -5,7 +5,7 @@ ASM = build/tml24c.s
 
 all: $(ASM)
 
-$(ASM): $(SRC) src/tml.h src/io.h src/heap.h src/symbol.h src/print.h src/read.h src/eval.h
+$(ASM): $(SRC) src/tml.h src/io.h src/heap.h src/symbol.h src/print.h src/read.h src/eval.h src/gc.h
 	@mkdir -p build
 	$(TC24R) $(SRC) -o $(ASM)
 

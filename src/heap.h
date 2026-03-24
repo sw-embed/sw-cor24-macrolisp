@@ -12,7 +12,13 @@ void heap_init() {
     heap_next = 0;
 }
 
+int gc_enabled;
+int gc_alloc_cell();  /* forward decl -- defined in gc.h */
+
 int alloc_cell() {
+    if (gc_enabled) {
+        return gc_alloc_cell();
+    }
     if (heap_next >= HEAP_SIZE) {
         puts_str("OOM\n");
         asm("_oom_halt:");

@@ -7,6 +7,7 @@
 #include "print.h"
 #include "read.h"
 #include "eval.h"
+#include "gc.h"
 
 void test_scaffold() {
     /* Fixnum */
@@ -180,12 +181,65 @@ void test_eval() {
     puts_str("eval ok\n");
 }
 
+void test_gc() {
+    /* Record heap state before GC test */
+    int before_next = heap_next;
+
+    /* Allocate a bunch of garbage (unreachable cells) */
+    int i = 0;
+    while (i < 100) {
+        cons(MAKE_FIXNUM(i), MAKE_FIXNUM(i));
+        i = i + 1;
+    }
+
+    int after_alloc = heap_next;
+    puts_str("allocated 100 garbage pairs, heap_next=");
+    print_int(after_alloc);
+    putc_uart(10);
+
+    /* Force a collection */
+    gc_collect();
+
+    /* Free list should now have cells available */
+    puts_str("gc collections=");
+    print_int(gc_collections);
+    putc_uart(10);
+
+    /* Verify reachable data survived: eval a simple expression */
+    test_eval_one("(+ 1 2)", "3");
+    test_eval_one("x", "42");
+    test_eval_one("(double 21)", "42");
+    test_eval_one("(fact 5)", "120");
+
+    /* Allocate more -- should reuse freed cells */
+    int v1 = cons(MAKE_FIXNUM(99), NIL_VAL);
+    gc_protect(v1);
+    puts_str("post-gc cons = ");
+    print_val(v1);
+    putc_uart(10);
+
+    /* Verify the protected value survives another GC */
+    gc_collect();
+    puts_str("after 2nd gc, val = ");
+    print_val(v1);
+    putc_uart(10);
+    gc_unprotect(1);
+
+    /* Final check: everything still works */
+    test_eval_one("(+ 100 200)", "300");
+
+    puts_str("gc ok\n");
+}
+
 int main() {
     heap_init();
+    gc_init();
     symbol_init();
     eval_init();
+    gc_enabled = 1;  /* enable GC after init */
     test_scaffold();
     test_reader();
     test_eval();
+    test_gc();
     return 0;
 }
