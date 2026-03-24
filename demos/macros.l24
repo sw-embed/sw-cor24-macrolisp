@@ -1,0 +1,29 @@
+;; macros.l24 -- let, cond, and, or macro demo
+
+;; let bindings
+(let ((x 10) (y 20)) (+ x y))
+
+;; nested let
+(let ((a 3)) (let ((b 4)) (* a b)))
+
+;; and (short-circuit)
+(and (< 1 2) (< 2 3))
+(and (< 1 2) (< 3 2))
+(and nil 42)
+
+;; or (short-circuit)
+(or nil 42)
+(or 99 nil)
+(or nil nil)
+
+;; cond (multi-way conditional)
+(define classify (lambda (n) (cond ((< n 0) 'negative) ((= n 0) 'zero) (t 'positive))))
+(classify -5)
+(classify 0)
+(classify 7)
+
+;; when/unless
+(when (< 1 2) 'yes)
+(unless (< 1 2) 'no)
+
+(exit)
