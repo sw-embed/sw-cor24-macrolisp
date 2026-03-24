@@ -1,6 +1,10 @@
-;; strings.l24 -- String type demo
+;; strings.l24 -- String type
+;;
+;; Shows: String literals, string-length, string-append, string=?, string?, display, strings in lists
+;; Prelude: standard
+;; Stack: 3 KB (default)
+;; Run: just eval demos/strings.l24
 
-;; String literals
 "hello"
 "world"
 

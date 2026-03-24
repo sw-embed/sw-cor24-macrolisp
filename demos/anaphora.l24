@@ -1,11 +1,10 @@
-;; anaphora.l24 -- Anaphoric macros (exploit unhygienic defmacro)
+;; anaphora.l24 -- Anaphoric macros (unhygienic variable capture)
 ;;
-;; Anaphoric macros bind 'it' to the result of a test expression,
-;; available in the body. Only possible with unhygienic macros.
-;;
-;; Run with: just eval demos/anaphora.l24
+;; Shows: aif, awhen, aand — macros that bind 'it' to the test result. Practical use with assoc lookup.
+;; Prelude: full (uses aif, awhen, aand)
+;; Stack: 3 KB (default)
+;; Run: just eval-full demos/anaphora.l24
 
-;; aif: anaphoric if — binds 'it' to the test result
 (defmacro aif (test then else) `(let ((it ,test)) (if it ,then ,else)))
 
 ;; awhen: anaphoric when — body can use 'it'

@@ -1,6 +1,10 @@
-;; quasiquote.l24 -- Quasiquote, unquote, and splicing demo
+;; quasiquote.l24 -- Quasiquote, unquote, and splicing
+;;
+;; Shows: ` (quasiquote), , (unquote), ,@ (unquote-splicing), macro code generation with templates
+;; Prelude: standard
+;; Stack: 3 KB (default)
+;; Run: just eval demos/quasiquote.l24
 
-;; Basic quasiquote (like quote but allows escapes)
 `(hello world)
 
 ;; Unquote: evaluate inside a template

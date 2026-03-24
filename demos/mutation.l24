@@ -1,8 +1,10 @@
-;; mutation.l24 -- set!, atoms, and memoization
+;; mutation.l24 -- Mutable state with set!
 ;;
-;; Run with: just eval demos/mutation.l24
+;; Shows: set!, counter closure, memoized fibonacci via cached alist, accumulator factory
+;; Prelude: standard
+;; Stack: 3 KB (default)
+;; Run: just eval demos/mutation.l24
 
-;; Basic set!
 (define x 0)
 (set! x 42)
 (println x)

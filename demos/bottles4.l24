@@ -1,11 +1,10 @@
-;; bottles4.l24 -- Bottles of Beer (functional/list version)
+;; bottles4.l24 -- 99 Bottles of Beer (functional list processing)
 ;;
-;; Inspired by demos/bottles4.clj which uses map/interleave/apply-str.
-;; Uses display-based output (str too expensive for list processing on COR24).
-;;
-;; Run with: just demo-bottles4
+;; Shows: map over verse components, for-each display, range-down. Defines its own helpers. Inspired by bottles4.clj.
+;; Prelude: standard (defines range-down, interleave3, for-each locally)
+;; Stack: 3 KB (default)
+;; Run: just demo-bottles4
 
-;; Helpers
 (define range-down (lambda (hi lo) (if (= hi lo) nil (cons hi (range-down (- hi 1) lo)))))
 (define for-each (lambda (f lst) (if (null? lst) nil (begin (f (car lst)) (for-each f (cdr lst))))))
 

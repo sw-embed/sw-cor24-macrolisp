@@ -1,6 +1,10 @@
-;; macros.l24 -- let, cond, and, or macro demo
+;; macros.l24 -- let, cond, and, or macros
+;;
+;; Shows: let bindings, nested let, and/or short-circuit, cond multi-way conditional, when/unless
+;; Prelude: standard
+;; Stack: 3 KB (default)
+;; Run: just eval demos/macros.l24
 
-;; let bindings
 (let ((x 10) (y 20)) (+ x y))
 
 ;; nested let

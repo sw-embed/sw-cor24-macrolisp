@@ -1,9 +1,9 @@
-;; multiline.l24 -- Multi-line expression demo
+;; multiline.l24 -- Multi-line expression input
 ;;
-;; Run with: just eval demos/multiline.l24
-;;
-;; The REPL now tracks paren depth and continues reading
-;; across newlines until parens balance.
+;; Shows: Paren-depth tracking across newlines. Multi-line define, cond, if.
+;; Prelude: standard
+;; Stack: 3 KB (default)
+;; Run: just eval demos/multiline.l24
 
 (define factorial
   (lambda (n)

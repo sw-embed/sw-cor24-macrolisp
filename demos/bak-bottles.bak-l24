@@ -1,0 +1,19 @@
+;; bottles.l24 -- 99 Bottles of Beer (abbreviated)
+;;
+;; Demonstrates: strings, recursion, cond, display, TCO
+
+(define n->s (lambda (n) (cond ((= n 0) "no more") ((= n 1) "1") ((= n 2) "2") ((= n 3) "3") ((= n 4) "4") ((= n 5) "5") (t "?"))))
+
+(define btl (lambda (n) (string-append (n->s n) (if (= n 1) " bottle" " bottles"))))
+
+(define wall (lambda (n) (begin (display (btl n)) (display " of beer on the wall"))))
+
+(define verse1 (lambda (n) (begin (wall n) (display ", ") (display (btl n)) (display " of beer.\n"))))
+
+(define verse2 (lambda (n) (begin (display "Take one down, ") (wall (- n 1)) (display ".\n\n"))))
+
+(define sing (lambda (n) (if (= n 0) (begin (verse1 0) (display "Go buy some more!\n")) (begin (verse1 n) (verse2 n) (sing (- n 1))))))
+
+(sing 5)
+
+(exit)

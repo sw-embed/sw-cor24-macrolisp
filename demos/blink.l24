@@ -1,9 +1,10 @@
-;; blink.l24 -- Blink D2 (LED bit 0) on COR24-TB
+;; blink.l24 -- Blink LED D2 on COR24-TB
 ;;
-;; Run with: just demo-blink
-;; Exit with: Ctrl-]
-;;
-;; Timing calibrated for --speed 500000.
+;; Shows: Memory-mapped I/O via set-leds, delay spin loop, tail-recursive blink
+;; Prelude: standard (uses set-leds, delay)
+;; Stack: 3 KB (default)
+;; Run: just demo-blink
+;; Note: Requires --speed 500000 for timing. Ctrl-] to exit.
 
 (define blink (lambda (on-ms off-ms) (begin (set-leds 1) (println 'on) (delay on-ms) (set-leds 0) (println 'off) (delay off-ms) (blink on-ms off-ms))))
 (blink 1000 1000)

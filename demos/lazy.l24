@@ -1,8 +1,10 @@
-;; lazy.l24 -- Lazy sequences demo
+;; lazy.l24 -- Lazy sequences
 ;;
-;; Run with: just eval demos/lazy.l24
+;; Shows: Infinite naturals, powers of 2, lazy-map, lazy-filter, iterate, take-while, drop-while, lazy fibonacci
+;; Prelude: full (uses lazy-cons, lazy-take, lazy-map, lazy-filter, iterate, lazy-range)
+;; Stack: 8 KB recommended (--stack-kilobytes 8)
+;; Run: just eval-full demos/lazy.l24
 
-;; Infinite natural numbers, take first 8
 (lazy-take 8 (lazy-range 0))
 
 ;; Powers of 2 via iterate

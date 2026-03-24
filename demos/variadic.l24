@@ -1,6 +1,10 @@
-;; variadic.l24 -- Rest parameters demo
+;; variadic.l24 -- Rest parameters (variadic functions)
+;;
+;; Shows: (lambda args ...) bare symbol params, (lambda (a . rest) ...) dotted pair params, variadic sum
+;; Prelude: standard (uses reduce)
+;; Stack: 3 KB (default)
+;; Run: just eval demos/variadic.l24
 
-;; Bare symbol parameter: collects all args
 (define my-list (lambda args args))
 (my-list 1 2 3 4 5)
 

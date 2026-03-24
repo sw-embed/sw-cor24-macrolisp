@@ -1,8 +1,9 @@
 ;; metaprogramming.l24 -- macroexpand, gensym, eval, symbol/string conversion
 ;;
-;; Run with: just eval demos/metaprogramming.l24
-
-;; === macroexpand-1: one step of macro expansion ===
+;; Shows: macroexpand-1 and macroexpand on when/let/cond, gensym for hygienic helpers, eval on constructed code, symbol<->string
+;; Prelude: standard
+;; Stack: 3 KB (default)
+;; Run: just eval demos/metaprogramming.l24
 
 (macroexpand-1 '(when (< x 0) (println 'negative)))
 (macroexpand-1 '(let ((a 1) (b 2)) (+ a b)))

@@ -1,12 +1,10 @@
-;; bottles.l24 -- Bottles of Beer
+;; bottles.l24 -- 99 Bottles of Beer (macro + tail recursion)
 ;;
-;; Run with: just demo-bottles
-;; Inspired by demos/bottles.clj
-;;
-;; Uses a macro for pluralization (like the Clojure version)
-;; but display instead of str for performance on COR24.
+;; Shows: defmacro for pluralization, display-based output, tail-recursive sing, number->string
+;; Prelude: standard
+;; Stack: 3 KB (default)
+;; Run: just demo-bottles
 
-;; Macro: display "N bottle(s)" (Clojure-inspired bottles macro)
 (defmacro bottles (n) `(begin (display (number->string ,n)) (if (= 1 ,n) (display " bottle") (display " bottles"))))
 
 ;; Display one verse

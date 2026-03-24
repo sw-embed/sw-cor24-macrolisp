@@ -1,8 +1,10 @@
-;; utilities.l24 -- Clojure-inspired utility functions demo
+;; utilities.l24 -- Clojure-inspired utility functions
 ;;
-;; Run with: just eval demos/utilities.l24
+;; Shows: partial, juxt, doseq, dotimes, for-each with display
+;; Prelude: full (uses partial, juxt, doseq, dotimes)
+;; Stack: 3 KB (default)
+;; Run: just eval-full demos/utilities.l24
 
-;; partial: fix some arguments
 (define add10 (partial + 10))
 (add10 5)
 (add10 20)

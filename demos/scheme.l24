@@ -1,10 +1,10 @@
-;; scheme.l24 -- Scheme-flavored demo
+;; scheme.l24 -- Scheme-flavored Lisp demo
 ;;
-;; Run with: just eval-custom demos/scheme.l24 prelude/scheme.l24
-;;
-;; Shows R7RS-style idioms running on tml24c.
+;; Shows: #t/#f booleans, cond with else, let/let*, define-fn shorthand, equal?, boolean?, list?, even?/odd?, factorial, tail-recursive sum
+;; Prelude: custom (prelude/scheme.l24)
+;; Stack: 3 KB (default)
+;; Run: just eval-custom demos/scheme.l24 prelude/scheme.l24
 
-;; Booleans: #t and #f
 (display "Booleans: ")
 (display #t)
 (display " ")

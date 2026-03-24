@@ -1,8 +1,10 @@
 ;; threading.l24 -- Thread-first (->) and thread-last (->>) macros
 ;;
-;; Run with: just eval demos/threading.l24
+;; Shows: -> threads value as first arg, ->> as last arg, pipeline-style data transformation
+;; Prelude: full (uses -> and ->>)
+;; Stack: 3 KB (default)
+;; Run: just eval-full demos/threading.l24
 
-;; -> threads value as first argument
 (-> 1 (+ 2))
 (-> (-> 1 (+ 2)) (* 10))
 
