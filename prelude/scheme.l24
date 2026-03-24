@@ -1,0 +1,86 @@
+;; scheme.l24 -- Scheme-flavored prelude
+;;
+;; R7RS-inspired naming conventions and idioms on top of tml24c.
+;; Load with: tml24c custom prelude/scheme.l24
+;;   or: just run-custom prelude/scheme.l24
+;;
+;; Supports both #t/#f and t/nil. No char type or call/cc.
+
+;; === Core list operations (same as standard, Scheme names) ===
+
+(define map (lambda (f lst) (if (null? lst) lst (cons (f (car lst)) (map f (cdr lst))))))
+(define filter (lambda (p lst) (if (null? lst) lst (if (p (car lst)) (cons (car lst) (filter p (cdr lst))) (filter p (cdr lst))))))
+(define for-each (lambda (f lst) (if (null? lst) (begin) (begin (f (car lst)) (for-each f (cdr lst))))))
+(define length (lambda (lst) (if (null? lst) 0 (+ 1 (length (cdr lst))))))
+(define append (lambda (a b) (if (null? a) b (cons (car a) (append (cdr a) b)))))
+(define reverse (lambda (lst) (define go (lambda (in out) (if (null? in) out (go (cdr in) (cons (car in) out))))) (go lst '())))
+(define list-ref (lambda (lst n) (if (= n 0) (car lst) (list-ref (cdr lst) (- n 1)))))
+
+;; === Scheme predicates ===
+
+(define boolean? (lambda (x) (if (eq? x #t) #t (null? x))))
+(define list? (lambda (x) (if (null? x) #t (if (pair? x) (list? (cdr x)) #f))))
+(define equal? (lambda (a b) (if (eq? a b) #t (if (pair? a) (if (pair? b) (if (equal? (car a) (car b)) (equal? (cdr a) (cdr b)) #f) #f) (if (string? a) (if (string? b) (string=? a b) #f) #f)))))
+(define zero? (lambda (n) (= n 0)))
+(define even? (lambda (n) (= (% n 2) 0)))
+(define odd? (lambda (n) (not (= (% n 2) 0))))
+
+;; === Scheme numeric ===
+
+(define abs (lambda (n) (if (< n 0) (- 0 n) n)))
+(define max (lambda (a b) (if (< a b) b a)))
+(define min (lambda (a b) (if (< a b) a b)))
+(define modulo %)
+(define remainder %)
+(define positive? (lambda (n) (< 0 n)))
+(define negative? (lambda (n) (< n 0)))
+
+;; === Scheme-style let/let*/letrec ===
+
+(define cadr (lambda (x) (car (cdr x))))
+(define caar (lambda (x) (car (car x))))
+(define cdar (lambda (x) (cdr (car x))))
+(define caddr (lambda (x) (car (cdr (cdr x)))))
+(define reduce (lambda (f init lst) (if (null? lst) init (reduce f (f init (car lst)) (cdr lst)))))
+
+(defmacro let (bindings body) `((lambda ,(map car bindings) ,body) ,@(map cadr bindings)))
+
+;; let*: sequential binding (each sees previous)
+(define let*-expand (lambda (bindings body) (if (null? (cdr bindings)) `(let (,(car bindings)) ,body) `(let (,(car bindings)) ,(let*-expand (cdr bindings) body)))))
+(defmacro let* (bindings body) (let*-expand bindings body))
+
+;; === Scheme-style cond with else ===
+
+(define cond-expand (lambda (clauses) (if (null? clauses) #f (if (eq? (caar clauses) 'else) (cadr (car clauses)) `(if ,(caar clauses) ,(cadr (car clauses)) ,(cond-expand (cdr clauses)))))))
+(defmacro cond clauses (cond-expand clauses))
+
+;; === Scheme logic ===
+
+(defmacro and (a b) `(if ,a ,b #f))
+(defmacro or (a b) `(if ,a ,a ,b))
+(defmacro when (test body) `(if ,test ,body (begin)))
+(defmacro unless (test body) `(if ,test (begin) ,body))
+
+;; === Scheme I/O ===
+;; display and newline are primitives, already available
+
+;; === String operations (Scheme names) ===
+
+(define string-length string-length)
+(define string-ref string-ref)
+(define string-append string-append)
+(define string=? string=?)
+(define number->string number->string)
+
+;; === Scheme-style define with shorthand ===
+;; (define-fn (f x y) body) => (define f (lambda (x y) body))
+
+(defmacro define-fn (sig body) `(define ,(car sig) (lambda ,(cdr sig) ,body)))
+
+;; === apply ===
+;; Already a primitive
+
+;; === Metaprogramming ===
+
+(define identity (lambda (x) x))
+(define compose (lambda (f g) (lambda (x) (f (g x)))))

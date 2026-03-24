@@ -208,9 +208,12 @@ int read_expr() {
         return cons(uq_sym, cons(val, NIL_VAL));
     }
 
-    /* hex literal: #xNN... */
-    if (ch == '#' && *(read_ptr + 1) == 'x') {
-        return read_hex();
+    /* # dispatch: #t #f #xNN */
+    if (ch == '#') {
+        int next = *(read_ptr + 1);
+        if (next == 'x') { return read_hex(); }
+        if (next == 't') { read_ptr = read_ptr + 2; return T_VAL; }
+        if (next == 'f') { read_ptr = read_ptr + 2; return NIL_VAL; }
     }
 
     /* negative number: '-' followed by digit */

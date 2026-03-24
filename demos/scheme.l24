@@ -1,0 +1,79 @@
+;; scheme.l24 -- Scheme-flavored demo
+;;
+;; Run with: just eval-custom demos/scheme.l24 prelude/scheme.l24
+;;
+;; Shows R7RS-style idioms running on tml24c.
+
+;; Booleans: #t and #f
+(display "Booleans: ")
+(display #t)
+(display " ")
+(display #f)
+(newline)
+
+;; cond with else
+(define-fn (classify n)
+  (cond
+    ((negative? n) "negative")
+    ((zero? n) "zero")
+    (else "positive")))
+(display (classify -5))
+(display " ")
+(display (classify 0))
+(display " ")
+(display (classify 7))
+(newline)
+
+;; let and let*
+(display "let: ")
+(display (let ((x 10) (y 20)) (+ x y)))
+(newline)
+
+(display "let*: ")
+(display (let* ((x 10) (y (* x 2))) (+ x y)))
+(newline)
+
+;; Higher-order functions
+(display "map: ")
+(display (map (lambda (x) (* x x)) '(1 2 3 4 5)))
+(newline)
+
+(display "filter: ")
+(display (filter even? '(1 2 3 4 5 6)))
+(newline)
+
+;; equal? (deep equality)
+(display "equal?: ")
+(display (equal? '(1 (2 3)) '(1 (2 3))))
+(display " ")
+(display (equal? '(1 2) '(1 3)))
+(newline)
+
+;; Predicates
+(display "boolean?: ")
+(display (boolean? #t))
+(display " ")
+(display (boolean? 42))
+(newline)
+
+(display "list?: ")
+(display (list? '(1 2 3)))
+(display " ")
+(display (list? (cons 1 2)))
+(newline)
+
+;; define-fn shorthand
+(define-fn (factorial n)
+  (if (= n 0) 1 (* n (factorial (- n 1)))))
+(display "fact 6: ")
+(display (factorial 6))
+(newline)
+
+;; Tail-recursive accumulator
+(define sum-helper (lambda (i acc) (if (= i 0) acc (sum-helper (- i 1) (+ acc i)))))
+(define-fn (sum-to n) (sum-helper n 0))
+(display "sum 1..100: ")
+(display (sum-to 100))
+(newline)
+
+(exit)
