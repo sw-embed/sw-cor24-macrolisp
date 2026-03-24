@@ -2,28 +2,37 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-## CRITICAL: AgentRail Workflow (MUST follow)
+## CRITICAL: AgentRail Session Protocol (MUST follow exactly)
 
-This project uses AgentRail for structured handoffs between sessions. You MUST run these commands:
+This project uses AgentRail. Every session follows this exact sequence:
 
-**FIRST thing every session** -- before reading code, before doing any work:
+### 1. START (do this FIRST, before anything else)
 ```bash
 agentrail next
 ```
-Read the output. It contains your plan, current step, prompt, skill docs, and past trajectories.
+Read the output carefully. It tells you your current step, prompt, skill docs, and past trajectories.
 
-**LAST thing every session** -- after committing code, before ending:
+### 2. BEGIN (immediately after reading the next output)
+```bash
+agentrail begin
+```
+
+### 3. WORK (do what the step prompt says)
+Do NOT ask the user "want me to proceed?" or "shall I start?". The step prompt IS your instruction. Execute it.
+
+### 4. COMMIT (after the work is done)
+Commit your code changes with git.
+
+### 5. COMPLETE (LAST thing, after committing)
 ```bash
 agentrail complete --summary "what you accomplished" \
   --reward 1 \
-  --actions "tools and approach used" \
-  --next-slug <next-step> \
-  --next-prompt "instructions for next agent"
+  --actions "tools and approach used"
 ```
-Use `--reward -1 --failure-mode "reason"` if the step failed.
-Use `--done` instead of `--next-*` if the saga is finished.
+If the step failed: `--reward -1 --failure-mode "what went wrong"`
+If the saga is finished: add `--done`
 
-Do NOT skip these commands. The next agent session depends on your trajectory recording.
+Do NOT skip steps 1, 2, or 5. The next session depends on your trajectory recording.
 
 ## Project
 
