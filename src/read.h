@@ -95,9 +95,8 @@ int read_list() {
         return NIL_VAL;
     }
 
-    /* read first element — protect from GC during cons */
+    /* read first element */
     int first = read_expr();
-    gc_protect(first);
     skip_whitespace();
 
     /* check for dotted pair */
@@ -105,18 +104,14 @@ int read_list() {
         read_ptr = read_ptr + 1;
         skip_whitespace();
         int d = read_expr();
-        gc_unprotect(1);
         return cons(first, d);
     }
 
     /* build list */
     int head = cons(first, NIL_VAL);
-    gc_unprotect(1);  /* first is now in head */
-    gc_protect(head);
     int tail = head;
     while (*read_ptr && *read_ptr != ')') {
         int elem = read_expr();
-        gc_protect(elem);
         skip_whitespace();
 
         /* check for dot after element */
@@ -124,17 +119,14 @@ int read_list() {
             read_ptr = read_ptr + 1;
             skip_whitespace();
             int d = read_expr();
-            gc_unprotect(1);  /* elem */
             heap_cdr[PTR_IDX(tail)] = d;
             if (*read_ptr == ')') {
                 read_ptr = read_ptr + 1;
             }
-            gc_unprotect(1);  /* head */
             return head;
         }
 
         int cell = cons(elem, NIL_VAL);
-        gc_unprotect(1);  /* elem — now in cell */
         heap_cdr[PTR_IDX(tail)] = cell;
         tail = cell;
     }
@@ -142,7 +134,6 @@ int read_list() {
     if (*read_ptr == ')') {
         read_ptr = read_ptr + 1;
     }
-    gc_unprotect(1);  /* head */
     return head;
 }
 

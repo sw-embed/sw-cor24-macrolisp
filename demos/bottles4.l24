@@ -1,0 +1,27 @@
+;; bottles4.l24 -- Bottles of Beer (functional/list version)
+;;
+;; Inspired by demos/bottles4.clj which uses map/interleave/apply-str.
+;; Uses display-based output (str too expensive for list processing on COR24).
+;;
+;; Run with: just demo-bottles4
+
+;; Helpers
+(define range-down (lambda (hi lo) (if (= hi lo) nil (cons hi (range-down (- hi 1) lo)))))
+(define for-each (lambda (f lst) (if (null? lst) nil (begin (f (car lst)) (for-each f (cdr lst))))))
+
+;; Verse components (matching bottles4.clj bob/tod pattern)
+(define bob (lambda (n sfx) (begin (display (number->string n)) (if (= 1 n) (display " bottle") (display " bottles")) (display " of beer") (display sfx))))
+
+(define otw " on the wall.\n\t")
+
+(define tod (lambda (who n) (begin (display "Take ") (display who) (display " down, pass it around;\n\t") (bob n otw) (display "\n"))))
+
+;; Build verse triples: (line1 line2 line3) for each n
+(define verse (lambda (n) (begin (bob n otw) (bob n ".\n") (tod "one" (- n 1)))))
+
+;; Sing: map verse over range, then final verse
+(define sing (lambda (n) (begin (for-each verse (range-down n 1)) (bob 1 otw) (bob 1 ".\n") (tod "it" 0))))
+
+(sing 5)
+
+(exit)

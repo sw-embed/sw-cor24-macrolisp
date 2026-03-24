@@ -126,6 +126,48 @@ Use `str` only when you need the resulting string as a value (e.g., to store or 
 - **Trampolining**: Mutual recursion via thunk-returning functions
 - **Association lists**: `(assoc key alist)`, `(get key alist default)` — replaces Clojure maps
 
+## Performance: `str` vs `display`
+
+Clojure's `str` builds strings in memory via efficient Java StringBuilder. In tml24c, `str` uses `(reduce string-append "" args)`, creating intermediate strings for each step. Each intermediate allocates from a fixed 2KB string pool and triggers GC pressure.
+
+For output, always prefer `display` (writes directly to UART) over building strings with `str`:
+
+```lisp
+;; SLOW: builds 4 intermediate strings, ~12M instructions
+(display (str n " bottles" " of beer" suffix))
+
+;; FAST: 4 direct UART writes, ~200 instructions
+(display (number->string n)) (display " bottles") (display " of beer") (display suffix)
+```
+
+Use `str` only when you need the resulting string as a value.
+
+## Bottles Demo Variants
+
+| File | Clojure Pattern | tml24c Translation | Status |
+|------|----------------|-------------------|--------|
+| `bottles.clj` | Macro + loop/recur | Macro + TCO recursion | `bottles.l24` — works |
+| `bottles2.clj` | Mutual recursion + trampoline | Same pattern | `bottles2.l24` — works |
+| `bottles3.clj` | Multimethods (`defmulti`/`defmethod`) | Not yet translatable | See below |
+| `bottles4.clj` | Functional (map/interleave/apply str) | map/for-each + display | `bottles4.l24` — works |
+
+### bottles3: Multimethods (future)
+
+`bottles3.clj` uses `defmulti`/`defmethod` for dispatch by verse number — different behavior for n>1, n=1, and n=0. This requires multimethods which are documented as a future enhancement in `docs/plan.md`. Key Clojure features needed:
+
+- `defmulti`/`defmethod`: dispatch on a key function — can be implemented with alist dispatch tables
+- `n2N` number-to-English-word map: requires hash maps or large alists
+- `.toLowerCase`: string case conversion — not available
+
+A partial translation would be possible once multimethods are added to the prelude.
+
+### bottles4: Functional list processing
+
+`bottles4.clj` builds lists of verse strings via `map`, `interleave`s them, and `apply str` to concatenate. The tml24c translation uses `map` + `for-each display` instead of building one huge string, because:
+- `str` with `reduce` creates O(n) intermediate strings per call
+- String pool (2KB) and GC pressure make bulk string building impractical
+- `display` writes directly to UART with zero allocation
+
 ## Patterns That Don't Translate
 
 - **Lazy sequences**: No lazy evaluation

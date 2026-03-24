@@ -121,12 +121,8 @@ void repl() {
             continue;
         }
         int expr = read_str(line);
-        gc_protect(expr);
         int result = eval(expr, global_env);
-        gc_unprotect(1);
-        gc_protect(result);
         print_val(result);
-        gc_unprotect(1);
         putc_uart('\n');
         puts_str("> ");
     }

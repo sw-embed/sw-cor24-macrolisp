@@ -151,12 +151,8 @@ int env_bind(int params, int args, int env) {
 int eval_list(int list, int env) {
     if (IS_NIL(list)) return NIL_VAL;
     int val = eval(car(list), env);
-    gc_protect(val);
     int rest = eval_list(cdr(list), env);
-    gc_protect(rest);
-    int result = cons(val, rest);
-    gc_unprotect(2);
-    return result;
+    return cons(val, rest);
 }
 
 int apply_primitive(int id, int args) {
@@ -439,12 +435,10 @@ int eval(int expr, int env) {
     /* begin — eval all but last, tail call last */
     if (head == sym_begin) {
         if (IS_NIL(args)) return NIL_VAL;
-        gc_protect(env);
         while (!IS_NIL(cdr(args))) {
             eval(car(args), env);
             args = cdr(args);
         }
-        gc_unprotect(1);
         expr = car(args);
         continue;
     }

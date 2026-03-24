@@ -10,7 +10,7 @@
  * (for protecting temporaries across allocations).
  */
 
-#define MAX_GC_ROOTS 64
+#define MAX_GC_ROOTS 256
 
 int heap_mark[HEAP_SIZE];
 int free_list;      /* head of free list (cell index), -1 = empty */

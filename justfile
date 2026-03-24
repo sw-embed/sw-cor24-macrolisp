@@ -55,6 +55,10 @@ demo-bottles: build-repl
 demo-bottles2: build-repl
     grep -v '^;;' demos/bottles2.l24 | {{cor24_run}} --run build/repl.s --terminal --speed 0 -n 200000000
 
+# 99 Bottles of Beer (functional map/for-each version)
+demo-bottles4: build-repl
+    grep -v '^;;' demos/bottles4.l24 | {{cor24_run}} --run build/repl.s --terminal --speed 0 -n 200000000
+
 # Clean build artifacts
 clean:
     rm -rf build
