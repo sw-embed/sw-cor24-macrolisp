@@ -1,0 +1,25 @@
+;; lazy.l24 -- Lazy sequences demo
+;;
+;; Run with: just eval demos/lazy.l24
+
+;; Infinite natural numbers, take first 8
+(lazy-take 8 (lazy-range 0))
+
+;; Powers of 2 via iterate
+(lazy-take 5 (iterate (lambda (x) (* x 2)) 1))
+
+;; Lazy map over infinite sequence
+(lazy-take 5 (lazy-map (lambda (x) (+ x 100)) (lazy-range 0)))
+
+;; Lazy filter: first 3 positives from -3..
+(lazy-take 3 (lazy-filter positive? (lazy-range -3)))
+
+;; take-while / drop-while on eager lists
+(take-while (lambda (x) (< x 5)) (list 1 2 3 4 5 6 7))
+(drop-while (lambda (x) (< x 5)) (list 1 2 3 4 5 6 7))
+
+;; Fibonacci via iterate on pairs (lazy-map is expensive, use 4)
+(define fib-step (lambda (p) (list (cadr p) (+ (car p) (cadr p)))))
+(lazy-take 4 (lazy-map car (iterate fib-step (list 0 1))))
+
+(exit)

@@ -334,6 +334,19 @@ void load_prelude() {
     eval_str("(define str2 (lambda (a b) (string-append (->str a) (->str b))))");
     eval_str("(define str (lambda args (reduce str2 \"\" args)))");
 
+    /* Lazy sequences: thunk-in-cdr, memoized on force via set! */
+    eval_str("(define lazy-cons (lambda (h thk) (cons h (cons 'thunk thk))))");
+    eval_str("(define lazy? (lambda (s) (and (pair? s) (and (pair? (cdr s)) (eq? (car (cdr s)) 'thunk)))))");
+    eval_str("(define lazy-car car)");
+    eval_str("(define lazy-cdr (lambda (s) (if (lazy? s) (let ((v ((cdr (cdr s))))) (begin (set! s (cons (car s) v)) v)) (cdr s))))");
+    eval_str("(define lazy-take (lambda (n s) (if (= n 0) nil (if (null? s) nil (cons (lazy-car s) (lazy-take (- n 1) (lazy-cdr s)))))))");
+    eval_str("(define lazy-map (lambda (f s) (if (null? s) nil (lazy-cons (f (lazy-car s)) (lambda () (lazy-map f (lazy-cdr s)))))))");
+    eval_str("(define lazy-filter (lambda (p s) (if (null? s) nil (if (p (lazy-car s)) (lazy-cons (lazy-car s) (lambda () (lazy-filter p (lazy-cdr s)))) (lazy-filter p (lazy-cdr s))))))");
+    eval_str("(define iterate (lambda (f x) (lazy-cons x (lambda () (iterate f (f x))))))");
+    eval_str("(define lazy-range (lambda (n) (iterate (lambda (x) (+ x 1)) n)))");
+    eval_str("(define take-while (lambda (p lst) (if (null? lst) nil (if (p (car lst)) (cons (car lst) (take-while p (cdr lst))) nil))))");
+    eval_str("(define drop-while (lambda (p lst) (if (null? lst) nil (if (p (car lst)) (drop-while p (cdr lst)) lst))))");
+
     /* Trampoline: repeatedly call thunks until non-function result */
     eval_str("(define trampoline (lambda (f) (let ((r (f))) (if (fn? r) (trampoline r) r))))");
 

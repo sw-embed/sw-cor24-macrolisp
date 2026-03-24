@@ -49,21 +49,24 @@ void gc_unprotect(int n) {
 /* --- Mark phase --- */
 
 void gc_mark_val(int v) {
-    /* Only cons and extended values reference heap cells */
-    if (IS_CONS(v)) {
-        int idx = PTR_IDX(v);
-        if (heap_mark[idx]) return;  /* already marked */
-        heap_mark[idx] = 1;
-        gc_mark_val(heap_car[idx]);
-        gc_mark_val(heap_cdr[idx]);
-    } else if (IS_EXTENDED(v)) {
-        int idx = PTR_IDX(v);
-        if (heap_mark[idx]) return;
-        heap_mark[idx] = 1;
-        /* Extended objects store type in car, data in cdr.
-         * Data may reference other heap cells (closures, macros). */
-        gc_mark_val(heap_car[idx]);
-        gc_mark_val(heap_cdr[idx]);
+    /* Iterate on cdr, recurse on car — prevents stack overflow
+     * when marking long alists (global_env with 60+ bindings) */
+    while (1) {
+        if (IS_CONS(v)) {
+            int idx = PTR_IDX(v);
+            if (heap_mark[idx]) return;
+            heap_mark[idx] = 1;
+            gc_mark_val(heap_car[idx]);
+            v = heap_cdr[idx];
+        } else if (IS_EXTENDED(v)) {
+            int idx = PTR_IDX(v);
+            if (heap_mark[idx]) return;
+            heap_mark[idx] = 1;
+            gc_mark_val(heap_car[idx]);
+            v = heap_cdr[idx];
+        } else {
+            return;
+        }
     }
 }
 
