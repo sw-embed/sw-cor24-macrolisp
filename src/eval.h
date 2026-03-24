@@ -56,6 +56,9 @@ int sym_unquote_splicing;
 #define PRIM_STR_EQ     28
 #define PRIM_STRINGP    29
 #define PRIM_DISPLAY    30
+#define PRIM_GC         31
+#define PRIM_HEAP_USED  32
+#define PRIM_HEAP_SIZE  33
 
 /* --- Extended object accessors --- */
 
@@ -277,6 +280,16 @@ int apply_primitive(int id, int args) {
         }
         return NIL_VAL;
     }
+    if (id == PRIM_GC) {
+        gc_collect();
+        return MAKE_FIXNUM(gc_count_free());
+    }
+    if (id == PRIM_HEAP_USED) {
+        return MAKE_FIXNUM(heap_next - gc_count_free());
+    }
+    if (id == PRIM_HEAP_SIZE) {
+        return MAKE_FIXNUM(HEAP_SIZE);
+    }
 
     return NIL_VAL;
 }
@@ -403,10 +416,12 @@ int eval(int expr, int env) {
     /* begin — eval all but last, tail call last */
     if (head == sym_begin) {
         if (IS_NIL(args)) return NIL_VAL;
+        gc_protect(env);
         while (!IS_NIL(cdr(args))) {
             eval(car(args), env);
             args = cdr(args);
         }
+        gc_unprotect(1);
         expr = car(args);
         continue;
     }
@@ -513,4 +528,7 @@ void eval_init() {
     register_prim("string=?", PRIM_STR_EQ);
     register_prim("string?", PRIM_STRINGP);
     register_prim("display", PRIM_DISPLAY);
+    register_prim("gc", PRIM_GC);
+    register_prim("heap-used", PRIM_HEAP_USED);
+    register_prim("heap-size", PRIM_HEAP_SIZE);
 }

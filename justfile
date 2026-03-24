@@ -40,13 +40,19 @@ test: build
 # Evaluate a .l24 file
 eval file: build-repl
     #!/usr/bin/env bash
-    grep -v '^;;' "{{file}}" | {{cor24_run}} --run build/repl.s --terminal --speed 0 -n 50000000 2>&1 | \
+    grep -v '^;;' "{{file}}" | {{cor24_run}} --run build/repl.s --terminal --speed 0 -n 200000000 2>&1 | \
         grep -v -E '^Assembled |Executed [0-9]+ instructions' | \
         python3 scripts/strip-prompts.py
 
 # Blink D2 LED demo (Ctrl-] to exit)
 demo-blink: build-repl
     grep -v '^;;' demos/blink.l24 | {{cor24_run}} --run build/repl.s --terminal --speed 500000
+
+# 99 Bottles of Beer demo
+demo-bottles: build-repl
+    grep -v '^;;' demos/bottles.l24 | {{cor24_run}} --run build/repl.s --terminal --speed 0 -n 500000000 2>&1 | \
+        grep -v -E '^Assembled |Executed [0-9]+ instructions' | \
+        python3 scripts/strip-prompts.py
 
 # Clean build artifacts
 clean:

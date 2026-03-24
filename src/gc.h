@@ -148,3 +148,13 @@ int gc_alloc_cell() {
     asm("bra _oom2_halt");
     return 0;
 }
+
+int gc_count_free() {
+    int count = 0;
+    int node = free_list;
+    while (node >= 0) {
+        count = count + 1;
+        node = heap_cdr[node];
+    }
+    return count;
+}

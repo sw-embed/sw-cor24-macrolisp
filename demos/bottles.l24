@@ -1,0 +1,22 @@
+;; bottles.l24 -- Bottles of Beer
+;;
+;; Run with: just demo-bottles
+;; Lines must be under 256 chars (REPL line buffer limit).
+
+(define n->s (lambda (n) (cond ((= n 0) "no more") ((= n 1) "1") ((= n 2) "2") ((= n 3) "3") ((= n 4) "4") ((= n 5) "5") (t "?"))))
+
+(define btl (lambda (n) (begin (display (n->s n)) (if (= n 1) (display " bottle") (display " bottles")))))
+
+(define line1 (lambda (n) (begin (btl n) (display " of beer on the wall, ") (btl n) (display " of beer.\n"))))
+
+(define line2a (lambda (n) (begin (display "Take one down and ") (display "pass it around, "))))
+
+(define line2b (lambda (n) (begin (btl (- n 1)) (display " of beer on the wall.\n\n"))))
+
+(define verse (lambda (n) (begin (line1 n) (if (> n 0) (begin (line2a n) (line2b n)) (display "Go buy some more!\n")))))
+
+(define sing (lambda (n) (begin (verse n) (if (> n 0) (sing (- n 1)) 'done))))
+
+(sing 5)
+
+(exit)
