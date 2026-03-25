@@ -256,6 +256,16 @@ void test_eval() {
     /* guard — multiple clauses, second matches */
     test_eval_one("(guard (e ((eq? e 'a) 1) ((eq? e 'b) 2)) (raise 'b))", "2");
 
+    /* make-parameter / parameterize */
+    eval(read_str("(define p (make-parameter 10))"), NIL_VAL);
+    test_eval_one("(p)", "10");
+    test_eval_one("(parameterize ((p 99)) (p))", "99");
+    test_eval_one("(p)", "10");
+
+    /* parameterize restores on throw */
+    eval(read_str("(catch 'bail (parameterize ((p 50)) (throw 'bail 0)))"), NIL_VAL);
+    test_eval_one("(p)", "10");
+
     /* eval_list — iterative, handles many args */
     test_eval_one("(list 1 2 3 4 5 6 7 8)", "(1 2 3 4 5 6 7 8)");
     test_eval_one("(+ (+ 1 2) (+ 3 4))", "10");
@@ -489,6 +499,13 @@ void load_prelude() {
     /* unwind-protect: (unwind-protect body cleanup...)
      * Evaluates body, then cleanup forms. Cleanup runs even on non-local exit. */
     eval_str("(defmacro unwind-protect (body cleanup) `(dynamic-wind (lambda () nil) (lambda () ,body) (lambda () ,cleanup)))");
+
+    /* Dynamic parameters: (make-parameter default) returns a parameter object.
+     * Call with no args to get current value, with one arg to set it.
+     * (parameterize ((param val)) body) temporarily rebinds for dynamic extent. */
+    eval_str("(define (make-parameter init) (let ((val init)) (lambda args (if (null? args) val (set! val (car args))))))");
+    eval_str("(define (call-with-parameterize param new-val thunk) (let ((saved (param))) (dynamic-wind (lambda () (param new-val)) thunk (lambda () (param saved)))))");
+    eval_str("(defmacro parameterize (bindings body) `(call-with-parameterize ,(caar bindings) ,(cadr (car bindings)) (lambda () ,body)))");
 
     /* COR24-TB I/O addresses */
     eval_str("(define IO-LED #xFF0000)");

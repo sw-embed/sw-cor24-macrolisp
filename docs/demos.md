@@ -20,6 +20,7 @@ All demos are in the `demos/` directory. Run with `just eval demos/<name>.l24` o
 | `multiline.l24` | Multi-line input | `just eval demos/multiline.l24` | Multi-line function definitions with paren-depth tracking |
 | `metaprogramming.l24` | eval, macroexpand, gensym | `just eval demos/metaprogramming.l24` | Runtime eval, macro introspection, hygienic gensym |
 | `continuations.l24` | catch/throw, call/ec, raise, guard, dynamic-wind, unwind-protect | `just demo-continuations` | Non-local exit, escape continuations, error handling, guaranteed cleanup |
+| `parameters.l24` | make-parameter, parameterize | `just eval demos/parameters.l24` | Dynamic parameters with scoped rebinding and throw-safe restore |
 | `fixedpoint.l24` | Integer arithmetic | `just eval demos/fixedpoint.l24` | Fixed-point currency/rational arithmetic using scaled integers |
 | `functional.l24` | fn?, compose, complement, every?, flatten, zip | `just eval-full demos/functional.l24` | Function combinators, list predicates, flatten/zip utilities |
 | `errors.l24` | Error messages | `just eval demos/errors.l24` | Evaluator error behavior: type errors, unbound symbols |

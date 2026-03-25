@@ -1,0 +1,80 @@
+;; parameters.l24 — Dynamic parameters demo
+;; Run with: just eval demos/parameters.l24
+
+;; === make-parameter: configurable defaults ===
+
+(display "--- dynamic parameters ---")
+(newline)
+
+(define *level* (make-parameter 0))
+
+(display "default: ")
+(println (*level*))
+
+;; parameterize temporarily rebinds
+(parameterize ((*level* 1))
+  (begin
+    (display "inside: ")
+    (println (*level*))))
+
+(display "restored: ")
+(println (*level*))
+
+;; Nesting
+(parameterize ((*level* 1))
+  (begin
+    (display "level 1: ")
+    (println (*level*))
+    (parameterize ((*level* 2))
+      (begin
+        (display "level 2: ")
+        (println (*level*))))
+    (display "back to 1: ")
+    (println (*level*))))
+
+(display "back to 0: ")
+(println (*level*))
+
+;; === Restores on non-local exit ===
+
+(display "--- restore on throw ---")
+(newline)
+
+(define *mode* (make-parameter 'normal))
+
+(display "before: ")
+(println (*mode*))
+
+(catch 'bail
+  (parameterize ((*mode* 'debug))
+    (begin
+      (display "inside: ")
+      (println (*mode*))
+      (throw 'bail 0))))
+
+(display "after throw: ")
+(println (*mode*))
+
+;; === Practical: verbose mode ===
+
+(display "--- verbose mode ---")
+(newline)
+
+(define *verbose* (make-parameter nil))
+
+(define (process x)
+  (if (*verbose*)
+    (begin (display "  processing ") (println x))
+    nil)
+  (* x x))
+
+(display "quiet: ")
+(println (map process '(1 2 3)))
+
+(parameterize ((*verbose* t))
+  (begin
+    (display "verbose: ")
+    (println (map process '(4 5 6)))))
+
+(display "--- done ---")
+(newline)
