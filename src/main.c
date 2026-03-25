@@ -201,6 +201,15 @@ void test_eval() {
     eval(read_str("(define bail (lambda () (throw 'escape 123)))"), NIL_VAL);
     test_eval_one("(catch 'escape (bail))", "123");
 
+    /* call/ec — basic escape continuation */
+    test_eval_one("(call/ec (lambda (return) 42))", "42");
+    test_eval_one("(call/ec (lambda (return) (return 99) 0))", "99");
+
+    /* call/ec — early return from for-each */
+    eval(read_str("(define (find-first pred lst) (call/ec (lambda (return) (for-each (lambda (x) (if (pred x) (return x) nil)) lst) nil)))"), NIL_VAL);
+    test_eval_one("(find-first (lambda (x) (= x 3)) '(1 2 3 4 5))", "3");
+    test_eval_one("(find-first (lambda (x) (= x 9)) '(1 2 3))", "nil");
+
     puts_str("eval ok\n");
 }
 
@@ -379,6 +388,9 @@ void load_prelude() {
 
     /* Trampoline: repeatedly call thunks until non-function result */
     eval_str("(define trampoline (lambda (f) (let ((r (f))) (if (fn? r) (trampoline r) r))))");
+
+    /* Escape continuations */
+    eval_str("(define (call/ec proc) (let ((tag (gensym))) (catch tag (proc (lambda (val) (throw tag val))))))");
 
     /* COR24-TB I/O addresses */
     eval_str("(define IO-LED #xFF0000)");
