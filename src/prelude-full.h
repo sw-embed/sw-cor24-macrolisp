@@ -19,7 +19,7 @@ void load_prelude() {
     /* Macros */
     eval_str("(defmacro when (cond . body) `(if ,cond (begin ,@body) nil))");
     eval_str("(defmacro unless (cond . body) `(if ,cond nil (begin ,@body)))");
-    eval_str("(define (let-expand first rest) (if (pair? first) `((lambda ,(map car first) ,@rest) ,@(map cadr first)) `((lambda () (define ,first (lambda ,(map car (car rest)) ,@(cdr rest))) (,first ,@(map cadr (car rest)))))))");
+    eval_str("(define (let-expand first rest) (if (pair? first) `((lambda ,(map car first) ,@rest) ,@(map cadr first)) `((lambda (,first) (set! ,first (lambda ,(map car (car rest)) ,@(cdr rest))) (,first ,@(map cadr (car rest)))) nil)))");
     eval_str("(defmacro let (first . rest) (let-expand first rest))");
     eval_str("(defmacro and (a b) `(if ,a ,b nil))");
     eval_str("(defmacro or (a b) `(if ,a ,a ,b))");

@@ -413,7 +413,7 @@ void load_prelude() {
     eval_str("(defmacro unless (cond . body) `(if ,cond nil (begin ,@body)))");
 
     /* let: (let ((x 1) (y 2)) body) => ((lambda (x y) body) 1 2) */
-    eval_str("(define (let-expand first rest) (if (pair? first) `((lambda ,(map car first) ,@rest) ,@(map cadr first)) `((lambda () (define ,first (lambda ,(map car (car rest)) ,@(cdr rest))) (,first ,@(map cadr (car rest)))))))");
+    eval_str("(define (let-expand first rest) (if (pair? first) `((lambda ,(map car first) ,@rest) ,@(map cadr first)) `((lambda (,first) (set! ,first (lambda ,(map car (car rest)) ,@(cdr rest))) (,first ,@(map cadr (car rest)))) nil)))");
     eval_str("(defmacro let (first . rest) (let-expand first rest))");
 
     /* and/or (two-arg, short-circuit via if) */
