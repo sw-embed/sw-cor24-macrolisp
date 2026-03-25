@@ -256,6 +256,10 @@ void test_eval() {
     /* guard — multiple clauses, second matches */
     test_eval_one("(guard (e ((eq? e 'a) 1) ((eq? e 'b) 2)) (raise 'b))", "2");
 
+    /* with-restart / invoke-restart */
+    test_eval_one("(with-restart 'use-value (lambda (v) v) (lambda () 42))", "42");
+    test_eval_one("(with-handler (lambda (e) (invoke-restart 'use-value 99)) (lambda () (with-restart 'use-value (lambda (v) v) (lambda () (raise 'oops)))))", "99");
+
     /* make-parameter / parameterize */
     eval(read_str("(define p (make-parameter 10))"), NIL_VAL);
     test_eval_one("(p)", "10");
@@ -488,7 +492,7 @@ void load_prelude() {
     eval_str("(define *error-tag* (gensym))");
     eval_str("(define *error-handler* nil)");
     eval_str("(define (raise obj) (if (null? *error-handler*) (begin (display \"ERROR: \") (println obj) (exit)) (*error-handler* obj)))");
-    eval_str("(define (with-handler handler thunk) (let ((saved *error-handler*)) (catch *error-tag* (begin (set! *error-handler* (lambda (e) (begin (set! *error-handler* saved) (throw *error-tag* (handler e))))) (let ((result (thunk))) (begin (set! *error-handler* saved) result))))))");
+    eval_str("(define (with-handler handler thunk) (let ((saved *error-handler*)) (begin (set! *error-handler* (lambda (e) (throw *error-tag* (handler e)))) (let ((result (catch *error-tag* (thunk)))) (begin (set! *error-handler* saved) result)))))");
     eval_str("(define (error msg) (raise msg))");
 
     /* guard: (guard (var (test expr) ...) body)
@@ -506,6 +510,14 @@ void load_prelude() {
     eval_str("(define (make-parameter init) (let ((val init)) (lambda args (if (null? args) val (set! val (car args))))))");
     eval_str("(define (call-with-parameterize param new-val thunk) (let ((saved (param))) (dynamic-wind (lambda () (param new-val)) thunk (lambda () (param saved)))))");
     eval_str("(defmacro parameterize (bindings body) `(call-with-parameterize ,(caar bindings) ,(cadr (car bindings)) (lambda () ,body)))");
+
+    /* Restartable conditions (CL-inspired).
+     * (with-restart name handler body) establishes a restart.
+     * (invoke-restart name value) invokes it from an error handler.
+     * Restarts run in the dynamic context of the signaler, not the handler. */
+    eval_str("(define *restarts* nil)");
+    eval_str("(define (with-restart name handler thunk) (let ((tag (gensym))) (let ((saved *restarts*)) (begin (set! *restarts* (cons (list name tag handler) *restarts*)) (let ((result (catch tag (let ((v (thunk))) (begin (set! *restarts* saved) v))))) (begin (set! *restarts* saved) result))))))");
+    eval_str("(define (invoke-restart name val) (let ((r (assoc name *restarts*))) (if (null? r) (begin (display \"ERR:no-restart \") (println name)) (let ((tag (cadr r))) (let ((handler (caddr r))) (throw tag (handler val)))))))");
 
     /* COR24-TB I/O addresses */
     eval_str("(define IO-LED #xFF0000)");

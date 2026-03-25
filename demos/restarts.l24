@@ -1,0 +1,52 @@
+;; restarts.l24 — Restartable conditions demo (CL-inspired)
+;; Run with: just eval demos/restarts.l24
+
+;; === Basic restart: use-value ===
+
+(display "--- restartable division ---")
+(newline)
+
+(define (safe-div a b) (with-restart 'use-value (lambda (v) v) (lambda () (if (= b 0) (raise 'div-by-zero) (/ a b)))))
+
+(display "10/0 with restart: ")
+(println (with-handler (lambda (e) (invoke-restart 'use-value 0)) (lambda () (safe-div 10 0))))
+
+(display "10/2 normal: ")
+(println (with-handler (lambda (e) (invoke-restart 'use-value 0)) (lambda () (safe-div 10 2))))
+
+;; === Restart with transform ===
+
+(display "--- restart with transform ---")
+(newline)
+
+(define (parse-int s) (with-restart 'use-value (lambda (v) v) (lambda () (if (number? s) s (raise (list 'parse-error s))))))
+
+(display "parse 42: ")
+(println (with-handler (lambda (e) (invoke-restart 'use-value -1)) (lambda () (parse-int 42))))
+
+(display "parse 'abc: ")
+(println (with-handler (lambda (e) (invoke-restart 'use-value -1)) (lambda () (parse-int 'abc))))
+
+;; === Practical: map with error recovery ===
+
+(display "--- map with recovery ---")
+(newline)
+
+(define (safe-square x) (with-restart 'skip (lambda (v) 'skipped) (lambda () (if (number? x) (* x x) (raise (list 'bad-input x))))))
+
+(display "process '(1 a 2): ")
+(println (with-handler (lambda (e) (invoke-restart 'skip nil)) (lambda () (map safe-square '(1 a 2)))))
+
+;; === Different handlers, same restarts ===
+
+(display "--- different strategies ---")
+(newline)
+
+(display "use 0: ")
+(println (with-handler (lambda (e) (invoke-restart 'use-value 0)) (lambda () (safe-div 10 0))))
+
+(display "use -999: ")
+(println (with-handler (lambda (e) (invoke-restart 'use-value -999)) (lambda () (safe-div 10 0))))
+
+(display "--- done ---")
+(newline)
