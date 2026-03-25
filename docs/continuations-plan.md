@@ -1,6 +1,6 @@
-# Continuations Plan for tml24c
+# Continuations in tml24c
 
-## Current Architecture
+## Architecture
 
 The evaluator (`src/eval.h`) is a **trampoline loop** — a single `while(1)` that
 reassigns `expr` and `env` and `continue`s for tail calls. Non-tail positions
@@ -12,9 +12,8 @@ This means:
 - The C stack is the implicit continuation — there is no reifiable frame object.
 - Full `call/cc` (capturing and resuming arbitrary continuations) would require
   replacing the evaluator with a bytecode VM or CPS-transformed interpreter.
-- That is a multi-week rewrite and out of scope for now.
 
-## What We *Can* Build: Escape Continuations
+## What We Built: Escape Continuations
 
 **Escape continuations** (one-shot, upward-only) are the high-value subset.
 They let you:
@@ -23,55 +22,75 @@ They let you:
 - Build `try`/`catch`-style error handling
 - Implement `guard` (R7RS) and `with-exception-handler`
 - Write search/backtracking that aborts on first match
+- Guarantee cleanup on any exit path (dynamic-wind, unwind-protect)
 
 They do NOT let you:
 - Resume a suspended computation (coroutines, generators)
 - Re-enter a continuation multiple times (full `call/cc`)
 
-### How escape continuations work
+## Implementation (bottom-up)
 
-```scheme
-(call/ec (lambda (return)
-  (for-each (lambda (x)
-    (if (= x 3) (return x)))  ;; non-local exit
-    '(1 2 3 4 5))
-  'not-found))
-;; => 3
-```
+### Layer 1: catch/throw (C-level primitives)
 
-`call/ec` captures the current "return point". Invoking the escape continuation
-jumps back to that point with a value. The continuation becomes invalid once
-`call/ec`'s body returns normally.
+`catch` is a special form; `throw` is a primitive. Both live in `src/eval.h`.
 
-## Implementation Plan
-
-### Step 1: catch/throw primitives (C-level)
-
-Add a **tag stack** to the evaluator:
-
+**Data structures:**
 ```c
 #define MAX_CATCH_DEPTH 16
 
-int catch_tags[MAX_CATCH_DEPTH];    // tag symbol for each catch frame
-int catch_vals[MAX_CATCH_DEPTH];    // return value (filled by throw)
-int catch_depth;                    // current depth
-int catch_throwing;                 // flag: are we unwinding?
-int catch_target;                   // depth to unwind to
+int catch_tags[MAX_CATCH_DEPTH];   // tag symbol for each catch frame
+int catch_vals[MAX_CATCH_DEPTH];   // return value (filled by throw)
+int catch_depth;                   // current stack depth
+int catch_throwing;                // flag: unwinding in progress?
+int catch_target;                  // depth to unwind to
 ```
 
-- `(catch 'tag body)` — push a catch frame, eval body. If body returns
-  normally, pop frame and return body's value. If a throw unwinds to this
-  frame, return the thrown value.
-- `(throw 'tag value)` — set `catch_throwing = 1`, `catch_target` to the
-  matching frame depth, `catch_vals[depth] = value`. The eval loop checks
-  `catch_throwing` after every sub-eval and returns immediately if set,
-  unwinding the C stack back to the matching `catch` frame.
+**How it works:**
+- `(catch tag-expr body-expr)` — eval tag, push catch frame, eval body. If body
+  returns normally, pop frame, return body's value. If `catch_throwing` is set
+  and `catch_target` matches this frame, clear flag, return `catch_vals[depth]`.
+- `(throw tag value)` — search catch stack for matching tag. Run any pending
+  `dynamic-wind` after thunks. Set `catch_throwing = 1`. Every recursive `eval`
+  call checks `catch_throwing` after return and immediately returns `NIL_VAL`
+  if set, unwinding the C stack back to the matching `catch` frame.
 
-**Test:** `(catch 'done (begin (throw 'done 42) 99))` => `42`
+**Unwind checks** are inserted after every recursive `eval` call in:
+`eval_list`, `if` condition, `define` value, `set!` value, `begin` intermediate
+forms, function head eval, macro expansion, argument evaluation.
 
-### Step 2: call/ec (escape continuations as closures)
+### Layer 2: dynamic-wind (C-level primitive)
 
-Build `call/ec` on top of catch/throw using gensym tags:
+```scheme
+(dynamic-wind before-thunk body-thunk after-thunk)
+```
+
+**Data structures:**
+```c
+#define MAX_WIND_DEPTH 16
+
+int wind_after[MAX_WIND_DEPTH];    // after thunk (closure) for each frame
+int wind_depth;                    // current wind stack depth
+```
+
+**How it works** (in `PRIM_DYN_WIND`):
+1. Call `before` thunk
+2. Save `wind_depth`, push `after` to wind stack
+3. Call `body` thunk via `apply_fn`
+4. Restore `wind_depth` to saved value (throw may have already popped)
+5. If not unwinding, call `after` thunk
+
+**Throw integration:** `PRIM_THROW` walks the wind stack top-down and calls
+each `after` thunk before setting `catch_throwing = 1`. This ensures cleanup
+runs even on non-local exit.
+
+**GC integration:** Both `wind_after[]` and `catch_tags[]/catch_vals[]` are
+marked as roots in `gc_collect()` (`src/gc.h`).
+
+**Key bug fixed:** Wind stack double-pop — when throw popped the wind stack
+and then `PRIM_DYN_WIND` decremented again on return, `wind_depth` went
+negative. Fix: save/restore instead of blind decrement.
+
+### Layer 3: call/ec (prelude function)
 
 ```scheme
 (define (call/ec proc)
@@ -80,45 +99,69 @@ Build `call/ec` on top of catch/throw using gensym tags:
       (proc (lambda (val) (throw tag val))))))
 ```
 
-This can be a macro or a prelude function. The escape continuation is a
-lambda that throws to the unique tag.
+Each `call/ec` invocation creates a unique gensym tag. The escape continuation
+is a lambda that throws to that tag. Available in all preludes.
 
-**Test:** early-return from `for-each`, nested `call/ec`, expired continuation
-detection.
+Scheme prelude also exports `call-with-escape-continuation` as an alias.
 
-### Step 3: Error handling (guard/raise)
-
-Build R7RS-style error handling on top of catch/throw:
+### Layer 4: raise / with-handler (prelude functions)
 
 ```scheme
-(define *current-handler* #f)
+(define *error-tag* (gensym))
+(define *error-handler* nil)
 
 (define (raise obj)
-  (if *current-handler*
-    (*current-handler* obj)
-    (begin (display "unhandled error: ") (println obj) (exit))))
+  (if (null? *error-handler*)
+    (begin (display "ERROR: ") (println obj) (exit))
+    (*error-handler* obj)))
 
-(defmacro guard (var clauses body)
-  ...)
+(define (with-handler handler thunk)
+  (let ((saved *error-handler*))
+    (catch *error-tag*
+      (begin
+        (set! *error-handler*
+          (lambda (e)
+            (begin (set! *error-handler* saved)
+                   (throw *error-tag* (handler e)))))
+        (let ((result (thunk)))
+          (begin (set! *error-handler* saved) result))))))
+
+(define (error msg) (raise msg))
 ```
 
-Or simpler: `with-handler` / `raise` pattern.
+Handler chain is dynamic — `with-handler` saves and restores `*error-handler*`
+on both normal return and error. Nested handlers work correctly: inner handler
+catches first.
 
-**Test:** divide-by-zero guard, nested handlers, re-raise.
+### Layer 5: guard (prelude macro)
 
-### Step 4: Demo — search with early exit
+```scheme
+(defmacro guard (binding body)
+  `(with-handler
+    (lambda (,(car binding))
+      ,(guard-clauses (car binding) (cdr binding)))
+    (lambda () ,body)))
+```
 
-A practical demo showing escape continuations used for:
-1. Early return from list search
-2. Error recovery in arithmetic
-3. Nested handler patterns
+R7RS-inspired syntax: `(guard (e (test1 expr1) (test2 expr2) (else default)) body)`.
+`guard-clauses` generates a chain of `if` tests against the error value.
 
-## What This Enables (post-implementation)
+### Layer 6: unwind-protect (prelude macro)
 
-- **Error handling** without halting the program
-- **Early return** from loops and deep recursion
-- **Guard clauses** for input validation
-- **Resource cleanup** patterns (dynamic-wind could follow)
+```scheme
+(defmacro unwind-protect (body cleanup)
+  `(dynamic-wind (lambda () nil) (lambda () ,body) (lambda () ,cleanup)))
+```
+
+Common Lisp style. Cleanup runs on both normal return and non-local exit.
+
+## What This Enables
+
+- **Error handling** without halting: `with-handler`, `guard`, `raise`
+- **Early return** from loops: `call/ec` + `for-each`
+- **Guard clauses** for input validation: `guard` with pattern matching
+- **Resource cleanup**: `dynamic-wind`, `unwind-protect`
+- **Short-circuit search**: `find-first`, `any?` via escape continuations
 
 ## What Full call/cc Would Require (future)
 
@@ -135,4 +178,15 @@ To go beyond escape continuations to full first-class continuations:
    cells. With 32K cells total, this limits practical depth.
 
 This is a significant architectural change (new opcode set, compiler pass,
-GC root model) — estimated at 2-4 weeks of work.
+GC root model).
+
+## Possible Next Steps
+
+- **Delimited continuations** (`shift`/`reset`) — less than full call/cc,
+  enables generators and coroutines. Requires eval changes but not a full
+  bytecode VM.
+- **Condition system** (Common Lisp style) — restartable errors where the
+  handler can choose how to recover without unwinding. Buildable on current
+  catch/throw infrastructure.
+- **Dynamic parameters** (`make-parameter`, `parameterize`) — thread-local
+  bindings using the wind stack for save/restore.
