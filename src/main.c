@@ -180,6 +180,27 @@ void test_eval() {
     eval(read_str("(define fact (lambda (n) (if (= n 0) 1 (* n (fact (- n 1))))))"), NIL_VAL);
     test_eval_one("(fact 5)", "120");
 
+    /* catch/throw — basic non-local exit */
+    test_eval_one("(catch 'done 42)", "42");
+    test_eval_one("(catch 'done (throw 'done 99))", "99");
+    test_eval_one("(catch 'done (begin 1 (throw 'done 77) 3))", "77");
+
+    /* catch/throw — skips unreachable code after throw */
+    test_eval_one("(catch 'x (+ 1 (throw 'x 50)))", "50");
+
+    /* catch/throw — nested, inner throw */
+    test_eval_one("(catch 'outer (catch 'inner (throw 'inner 10)))", "10");
+
+    /* catch/throw — nested, throw to outer */
+    test_eval_one("(catch 'outer (catch 'inner (throw 'outer 20)))", "20");
+
+    /* catch/throw — body returns normally */
+    test_eval_one("(catch 'tag (+ 3 4))", "7");
+
+    /* catch/throw — throw from inside a lambda call */
+    eval(read_str("(define bail (lambda () (throw 'escape 123)))"), NIL_VAL);
+    test_eval_one("(catch 'escape (bail))", "123");
+
     puts_str("eval ok\n");
 }
 

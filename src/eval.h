@@ -2,7 +2,7 @@
 
 /* eval.h -- Evaluator with core special forms
  *
- * Special forms: quote, if, define, lambda, defmacro, begin
+ * Special forms: quote, if, define, lambda, defmacro, begin, catch
  * Environment: alist of (symbol . value) pairs
  * Closures/macros: extended heap objects
  */
@@ -25,7 +25,18 @@ int sym_quasiquote;
 int sym_unquote;
 int sym_unquote_splicing;
 int sym_set;
+int sym_catch;
 int gensym_counter;
+
+/* --- Escape continuation support (catch/throw) --- */
+
+#define MAX_CATCH_DEPTH 16
+
+int catch_tags[MAX_CATCH_DEPTH];   /* tag symbol for each catch frame */
+int catch_vals[MAX_CATCH_DEPTH];   /* return value (filled by throw) */
+int catch_depth;                   /* current stack depth */
+int catch_throwing;                /* flag: unwinding in progress? */
+int catch_target;                  /* depth to unwind to */
 /* Primitive IDs */
 #define PRIM_ADD     0
 #define PRIM_SUB     1
@@ -68,6 +79,7 @@ int gensym_counter;
 #define PRIM_GENSYM     38
 #define PRIM_SYM_TO_STR 39
 #define PRIM_STR_TO_SYM 40
+#define PRIM_THROW      41
 
 /* --- Extended object accessors --- */
 
@@ -163,7 +175,9 @@ int env_bind(int params, int args, int env) {
 int eval_list(int list, int env) {
     if (IS_NIL(list)) return NIL_VAL;
     int val = eval(car(list), env);
+    if (catch_throwing) return NIL_VAL;
     int rest = eval_list(cdr(list), env);
+    if (catch_throwing) return NIL_VAL;
     return cons(val, rest);
 }
 
@@ -381,6 +395,25 @@ int apply_primitive(int id, int args) {
         }
         return NIL_VAL;
     }
+    if (id == PRIM_THROW) {
+        /* (throw tag value) -- initiate non-local exit to matching catch */
+        int tag = a;
+        int val = b;
+        int i = catch_depth - 1;
+        while (i >= 0) {
+            if (catch_tags[i] == tag) {
+                catch_throwing = 1;
+                catch_target = i;
+                catch_vals[i] = val;
+                return NIL_VAL;  /* value ignored; unwind via flag */
+            }
+            i = i - 1;
+        }
+        puts_str("ERR:no-catch ");
+        print_val(tag);
+        putc_uart(10);
+        return NIL_VAL;
+    }
     if (id == PRIM_NUM_TO_STR) {
         int n = FIXNUM_VAL(a);
         char buf[12];
@@ -485,6 +518,7 @@ int eval(int expr, int env) {
     /* if — tail call both branches */
     if (head == sym_if) {
         int cond_val = eval(car(args), env);
+        if (catch_throwing) return NIL_VAL;
         if (!IS_NIL(cond_val)) {
             expr = car(cdr(args));
             continue;
@@ -508,6 +542,7 @@ int eval(int expr, int env) {
             return val;
         }
         int val = eval(car(cdr(args)), env);
+        if (catch_throwing) return NIL_VAL;
         global_env = env_extend(first, val, global_env);
         return val;
     }
@@ -516,6 +551,7 @@ int eval(int expr, int env) {
     if (head == sym_set) {
         int sym = car(args);
         int val = eval(car(cdr(args)), env);
+        if (catch_throwing) return NIL_VAL;
         /* Search local env first */
         int e = env;
         while (!IS_NIL(e)) {
@@ -559,11 +595,34 @@ int eval(int expr, int env) {
         return mac;
     }
 
+    /* catch — (catch tag-expr body-expr): non-local exit target */
+    if (head == sym_catch) {
+        int tag = eval(car(args), env);
+        if (catch_throwing) return NIL_VAL;
+        if (catch_depth >= MAX_CATCH_DEPTH) {
+            puts_str("ERR:catch-overflow\n");
+            return NIL_VAL;
+        }
+        catch_tags[catch_depth] = tag;
+        catch_vals[catch_depth] = NIL_VAL;
+        int saved_depth = catch_depth;
+        catch_depth = catch_depth + 1;
+        int result = eval(car(cdr(args)), env);
+        catch_depth = saved_depth;
+        if (catch_throwing && catch_target == saved_depth) {
+            catch_throwing = 0;
+            return catch_vals[saved_depth];
+        }
+        if (catch_throwing) return NIL_VAL;  /* propagate unwind */
+        return result;
+    }
+
     /* begin — eval all but last, tail call last */
     if (head == sym_begin) {
         if (IS_NIL(args)) return NIL_VAL;
         while (!IS_NIL(cdr(args))) {
             eval(car(args), env);
+            if (catch_throwing) return NIL_VAL;
             args = cdr(args);
         }
         expr = car(args);
@@ -572,12 +631,14 @@ int eval(int expr, int env) {
 
     /* Function call: eval head */
     int fn = eval(head, env);
+    if (catch_throwing) return NIL_VAL;
 
     /* Macro expansion — tail call the expanded form */
     if (IS_EXTENDED(fn)) {
         if (ext_type(fn) == ETYPE_MACRO) {
             int mac_env = env_bind(closure_params(fn), args, closure_env(fn));
             int expanded = eval(closure_body(fn), mac_env);
+            if (catch_throwing) return NIL_VAL;
             expr = expanded;
             continue;
         }
@@ -585,6 +646,7 @@ int eval(int expr, int env) {
 
     /* Evaluate arguments */
     int evaled_args = eval_list(args, env);
+    if (catch_throwing) return NIL_VAL;
 
     /* Closure application — tail call the body */
     if (IS_EXTENDED(fn)) {
@@ -644,6 +706,11 @@ void eval_init() {
     sym_unquote = intern("unquote");
     sym_unquote_splicing = intern("unquote-splicing");
     sym_set = intern("set!");
+    sym_catch = intern("catch");
+
+    /* Initialize catch/throw state */
+    catch_depth = 0;
+    catch_throwing = 0;
 
     register_prim("+", PRIM_ADD);
     register_prim("-", PRIM_SUB);
@@ -686,5 +753,6 @@ void eval_init() {
     register_prim("gensym", PRIM_GENSYM);
     register_prim("symbol->string", PRIM_SYM_TO_STR);
     register_prim("string->symbol", PRIM_STR_TO_SYM);
+    register_prim("throw", PRIM_THROW);
     gensym_counter = 0;
 }
