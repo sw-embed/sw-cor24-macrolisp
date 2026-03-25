@@ -18,7 +18,7 @@ All demos are in the `demos/` directory. Run with `just eval demos/<name>.l24` o
 | `utilities.l24` | partial, juxt, doseq, dotimes | `just eval demos/utilities.l24` | Curried functions, multi-result, iteration macros |
 | `multiline.l24` | Multi-line input | `just eval demos/multiline.l24` | Multi-line function definitions with paren-depth tracking |
 | `metaprogramming.l24` | eval, macroexpand, gensym | `just eval demos/metaprogramming.l24` | Runtime eval, macro introspection, hygienic gensym |
-| `continuations.l24` | catch/throw, call/ec, raise | `just demo-continuations` | Non-local exit, escape continuations, error handling |
+| `continuations.l24` | catch/throw, call/ec, raise, guard, dynamic-wind, unwind-protect | `just demo-continuations` | Non-local exit, escape continuations, error handling, guaranteed cleanup |
 | `fixedpoint.l24` | Integer arithmetic | `just eval demos/fixedpoint.l24` | Fixed-point currency/rational arithmetic using scaled integers |
 | `errors.l24` | Error messages | `just eval demos/errors.l24` | Evaluator error behavior: type errors, unbound symbols |
 | `scheme.l24` | Scheme prelude | `just eval-scheme demos/scheme.l24` | R7RS-style naming: let*, cond/else, even?/odd?, equal? |
