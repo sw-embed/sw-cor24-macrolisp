@@ -438,12 +438,13 @@ int apply_primitive(int id, int args) {
             puts_str("ERR:wind-overflow\n");
             return NIL_VAL;
         }
+        int saved_wind = wind_depth;
         wind_after[wind_depth] = after;
         wind_depth = wind_depth + 1;
         /* Call thunk */
         int result = apply_fn(thunk, NIL_VAL);
-        /* Pop wind stack and call after (normal exit) */
-        wind_depth = wind_depth - 1;
+        /* Restore wind depth (throw may have already popped) */
+        wind_depth = saved_wind;
         if (!catch_throwing) {
             apply_fn(after, NIL_VAL);
         }

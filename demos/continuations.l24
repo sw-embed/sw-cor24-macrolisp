@@ -148,5 +148,30 @@
 (display "thrown: ")
 (println dw-trace)
 
+;; === Part 7: unwind-protect — guaranteed cleanup (CL-style) ===
+
+(display "--- unwind-protect ---")
+(newline)
+
+;; Normal exit: cleanup runs after body
+(define up-result nil)
+(define up-val
+  (unwind-protect
+    (begin (set! up-result 'ok) 42)
+    (set! up-result (list up-result 'cleaned))))
+(display "normal: val=")
+(print up-val)
+(display " result=")
+(println up-result)
+
+;; Throw exit: cleanup still runs
+(set! up-result nil)
+(catch 'abort
+  (unwind-protect
+    (begin (set! up-result 'started) (throw 'abort 'bailed))
+    (set! up-result (list up-result 'cleaned))))
+(display "thrown: ")
+(println up-result)
+
 (display "--- done ---")
 (newline)
