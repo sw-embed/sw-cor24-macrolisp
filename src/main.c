@@ -256,6 +256,11 @@ void test_eval() {
     /* guard — multiple clauses, second matches */
     test_eval_one("(guard (e ((eq? e 'a) 1) ((eq? e 'b) 2)) (raise 'b))", "2");
 
+    /* guard — multi-body */
+    eval(read_str("(define guard-log nil)"), NIL_VAL);
+    test_eval_one("(guard (e (else 0)) (set! guard-log 'ran) (+ 1 2))", "3");
+    test_eval_one("guard-log", "ran");
+
     /* Multi-body let */
     test_eval_one("(let ((x 1)) (+ x 1) (* x 10))", "10");
     eval(read_str("(define mb-log nil)"), NIL_VAL);
@@ -515,8 +520,8 @@ void load_prelude() {
     /* Utility functions (Clojure-inspired) */
     eval_str("(define partial (lambda (f . args) (lambda rest (apply f (append args rest)))))");
     eval_str("(define juxt (lambda (f g) (lambda (x) (list (f x) (g x)))))");
-    eval_str("(defmacro doseq (binding body) `(for-each (lambda (,(car binding)) ,body) ,(cadr binding)))");
-    eval_str("(defmacro dotimes (binding body) `(for-each (lambda (,(car binding)) ,body) (range ,(cadr binding))))");
+    eval_str("(defmacro doseq (binding . body) `(for-each (lambda (,(car binding)) ,@body) ,(cadr binding)))");
+    eval_str("(defmacro dotimes (binding . body) `(for-each (lambda (,(car binding)) ,@body) (range ,(cadr binding))))");
 
     /* Trampoline: repeatedly call thunks until non-function result */
     eval_str("(define trampoline (lambda (f) (let ((r (f))) (if (fn? r) (trampoline r) r))))");
@@ -534,7 +539,7 @@ void load_prelude() {
     /* guard: (guard (var (test expr) ...) body)
      * Expands to with-handler that pattern-matches the error value */
     eval_str("(define (guard-clauses var clauses) (if (null? clauses) '(raise e) (let ((clause (car clauses))) (if (eq? (car clause) 'else) (cadr clause) `(if ,(car clause) ,(cadr clause) ,(guard-clauses var (cdr clauses)))))))");
-    eval_str("(defmacro guard (binding body) `(with-handler (lambda (,(car binding)) ,(guard-clauses (car binding) (cdr binding))) (lambda () ,body)))");
+    eval_str("(defmacro guard (binding . body) `(with-handler (lambda (,(car binding)) ,(guard-clauses (car binding) (cdr binding))) (lambda () ,@body)))");
 
     /* unwind-protect: (unwind-protect body cleanup...)
      * Evaluates body, then cleanup forms. Cleanup runs even on non-local exit. */
