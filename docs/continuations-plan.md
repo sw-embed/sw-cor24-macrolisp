@@ -155,6 +155,41 @@ R7RS-inspired syntax: `(guard (e (test1 expr1) (test2 expr2) (else default)) bod
 
 Common Lisp style. Cleanup runs on both normal return and non-local exit.
 
+### Layer 7: dynamic parameters (prelude)
+
+```scheme
+(define (make-parameter init)
+  (let ((val init))
+    (lambda args (if (null? args) val (set! val (car args))))))
+
+(defmacro parameterize (bindings body)
+  `(call-with-parameterize ,(caar bindings) ,(cadr (car bindings))
+     (lambda () ,body)))
+```
+
+Parameters are closures over mutable cells. `parameterize` uses `dynamic-wind`
+to save/restore the parameter value, ensuring restoration on non-local exit.
+
+### Layer 8: restartable conditions (prelude)
+
+```scheme
+(define (with-restart name handler thunk)
+  (let ((tag (gensym)))
+    (let ((saved *restarts*))
+      (begin
+        (set! *restarts* (cons (list name tag handler) *restarts*))
+        (let ((result (catch tag (let ((v (thunk)))
+                        (begin (set! *restarts* saved) v)))))
+          (begin (set! *restarts* saved) result))))))
+
+(define (invoke-restart name val) ...)
+```
+
+CL-inspired: code establishes restarts, error handlers invoke them. The
+handler runs in the signaler's dynamic context and can choose which restart
+to invoke. Supports multiple active restarts and multi-error recovery
+(e.g., map with skip-on-error).
+
 ## What This Enables
 
 - **Error handling** without halting: `with-handler`, `guard`, `raise`
@@ -162,6 +197,8 @@ Common Lisp style. Cleanup runs on both normal return and non-local exit.
 - **Guard clauses** for input validation: `guard` with pattern matching
 - **Resource cleanup**: `dynamic-wind`, `unwind-protect`
 - **Short-circuit search**: `find-first`, `any?` via escape continuations
+- **Configurable defaults**: `make-parameter`, `parameterize`
+- **Recoverable errors**: `with-restart`, `invoke-restart`
 
 ## What Full call/cc Would Require (future)
 
@@ -183,10 +220,6 @@ GC root model).
 ## Possible Next Steps
 
 - **Delimited continuations** (`shift`/`reset`) — less than full call/cc,
-  enables generators and coroutines. Requires eval changes but not a full
-  bytecode VM.
-- **Condition system** (Common Lisp style) — restartable errors where the
-  handler can choose how to recover without unwinding. Buildable on current
-  catch/throw infrastructure.
-- **Dynamic parameters** (`make-parameter`, `parameterize`) — thread-local
-  bindings using the wind stack for save/restore.
+  enables generators and coroutines. Requires eval changes (stack capture)
+  that the current trampoline architecture cannot support without a bytecode
+  VM rewrite.
