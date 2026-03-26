@@ -86,6 +86,7 @@ int wind_depth;                    /* current wind stack depth */
 #define PRIM_STR_TO_SYM 40
 #define PRIM_THROW      41
 #define PRIM_DYN_WIND   42
+#define PRIM_SYMBOLP    43
 
 /* --- Extended object accessors --- */
 
@@ -282,6 +283,10 @@ int apply_primitive(int id, int args) {
     }
     if (id == PRIM_NUMP) {
         if (IS_FIXNUM(a)) return T_VAL;
+        return NIL_VAL;
+    }
+    if (id == PRIM_SYMBOLP) {
+        if (IS_SYMBOL(a) && !IS_NIL(a) && a != T_VAL) return T_VAL;
         return NIL_VAL;
     }
     if (id == PRIM_EXIT) {
@@ -823,5 +828,6 @@ void eval_init() {
     register_prim("string->symbol", PRIM_STR_TO_SYM);
     register_prim("throw", PRIM_THROW);
     register_prim("dynamic-wind", PRIM_DYN_WIND);
+    register_prim("symbol?", PRIM_SYMBOLP);
     gensym_counter = 0;
 }

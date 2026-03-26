@@ -313,6 +313,13 @@ void test_eval() {
     test_eval_one("(multi-test 7)", "21");
     test_eval_one("side-log", "7");
 
+    /* symbol? */
+    test_eval_one("(symbol? 'foo)", "t");
+    test_eval_one("(symbol? 42)", "nil");
+    test_eval_one("(symbol? '(1 2))", "nil");
+    test_eval_one("(symbol? nil)", "nil");
+    test_eval_one("(symbol? t)", "nil");
+
     /* fn? — callable type predicate */
     test_eval_one("(fn? +)", "t");
     test_eval_one("(fn? double)", "t");
