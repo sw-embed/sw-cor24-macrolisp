@@ -56,6 +56,16 @@ void test_scaffold() {
     puts_str("scaffold ok\n");
 }
 
+void load_string(char *s) {
+    read_ptr = s;
+    while (1) {
+        skip_whitespace();
+        if (*read_ptr == 0) return;
+        int expr = read_expr();
+        eval(expr, global_env);
+    }
+}
+
 void test_read_one(char *input, char *expected) {
     int val = read_str(input);
     puts_str(input);
@@ -323,6 +333,11 @@ void test_eval() {
     test_eval_one("(symbol? '(1 2))", "nil");
     test_eval_one("(symbol? nil)", "nil");
     test_eval_one("(symbol? t)", "nil");
+
+    /* load_string — batch eval */
+    eval(read_str("(define test-batch nil)"), NIL_VAL);
+    load_string("(set! test-batch 1) (set! test-batch (+ test-batch 1))");
+    test_eval_one("test-batch", "2");
 
     /* defmacro 3-param rest binding */
     eval(read_str("(defmacro test-bind (a b . c) `(list ',a ',b ',c))"), NIL_VAL);
