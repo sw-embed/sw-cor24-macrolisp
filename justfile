@@ -31,7 +31,27 @@ build-bare:
     mkdir -p build
     {{tc24r}} src/repl-bare.c -o build/repl-bare.s
 
+build-snapshot-save:
+    mkdir -p build
+    {{tc24r}} src/snapshot-save.c -o build/snapshot-save.s
+
+build-snapshot:
+    mkdir -p build
+    {{tc24r}} src/repl-snapshot.c -o build/repl-snapshot.s
+
+# Generate prelude snapshot (binary blob)
+snapshot: build-snapshot-save
+    #!/usr/bin/env bash
+    set -euo pipefail
+    echo "Generating prelude snapshot..."
+    echo "" | {{cor24_run}} --run build/snapshot-save.s --terminal --speed 0 -n 50000000 2>&1 > build/prelude.snap.raw
+    python3 scripts/extract-snapshot.py build/prelude.snap.raw build/prelude.snap
+
 # === REPL: precompiled preludes ===
+
+# Interactive REPL with snapshot-accelerated standard prelude
+run-fast: build-snapshot snapshot
+    {{cor24_run}} --run build/repl-snapshot.s --load-binary build/prelude.snap@0x080000 --terminal --echo --speed 0
 
 # Interactive REPL with minimal prelude
 run-minimal: build-minimal
