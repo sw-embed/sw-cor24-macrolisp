@@ -135,5 +135,17 @@
 (for-each (lambda (n) (display (format "~a:~a " n (classify n)))) '(0 1 2 3 4 5))
 (newline)
 
+;; === assert ===
+
+(display "--- assert ---")
+(newline)
+
+(assert (= (+ 2 3) 5))
+(display "2+3=5 ok")
+(newline)
+
+(display "bad assert: ")
+(println (with-handler (lambda (e) (format "caught: ~a" e)) (lambda () (assert (= 1 2) "math is broken"))))
+
 (display "--- done ---")
 (newline)

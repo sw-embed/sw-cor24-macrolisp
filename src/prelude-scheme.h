@@ -60,6 +60,10 @@ void load_prelude() {
     eval_str("(defmacro when (test . body) `(if ,test (begin ,@body) nil))");
     eval_str("(defmacro unless (test . body) `(if ,test nil (begin ,@body)))");
 
+    /* assert */
+    eval_str("(define (assert-msg msg) (if (null? msg) \"assertion failed\" (car msg)))");
+    eval_str("(defmacro assert (expr . msg) `(if ,expr t (raise ,(assert-msg msg))))");
+
     /* Multiple return values */
     eval_str("(define values list)");
     eval_str("(define (call-with-values producer consumer) (apply consumer (producer)))");

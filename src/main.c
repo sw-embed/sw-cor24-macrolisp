@@ -275,6 +275,12 @@ void test_eval() {
     test_eval_one("(guard (e (else 0)) (set! guard-log 'ran) (+ 1 2))", "3");
     test_eval_one("guard-log", "ran");
 
+    /* assert */
+    test_eval_one("(assert t)", "t");
+    test_eval_one("(assert (= 1 1))", "t");
+    test_eval_one("(with-handler (lambda (e) e) (lambda () (assert nil)))", "\"assertion failed\"");
+    test_eval_one("(with-handler (lambda (e) e) (lambda () (assert (= 1 2) \"1 != 2\")))", "\"1 != 2\"");
+
     /* values / call-with-values */
     test_eval_one("(call-with-values (lambda () (values 1 2)) +)", "3");
     test_eval_one("(call-with-values (lambda () (values 10 20 30)) list)", "(10 20 30)");
@@ -522,6 +528,10 @@ void load_prelude() {
     eval_str("(define (case-match-datums key datums) (if (null? datums) nil (if (eq? key (car datums)) t (case-match-datums key (cdr datums)))))");
     eval_str("(define (case-expand-clauses key clauses) (if (null? clauses) nil (if (eq? (caar clauses) 'else) (cadr (car clauses)) `(if (case-match-datums ,key ',(caar clauses)) ,(cadr (car clauses)) ,(case-expand-clauses key (cdr clauses))))))");
     eval_str("(defmacro case (expr . clauses) `(let ((_k_ ,expr)) ,(case-expand-clauses '_k_ clauses)))");
+
+    /* assert */
+    eval_str("(define (assert-msg msg) (if (null? msg) \"assertion failed\" (car msg)))");
+    eval_str("(defmacro assert (expr . msg) `(if ,expr t (raise ,(assert-msg msg))))");
 
     /* Multiple return values */
     eval_str("(define values list)");
