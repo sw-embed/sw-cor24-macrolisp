@@ -320,6 +320,14 @@ void test_eval() {
     test_eval_one("(symbol? nil)", "nil");
     test_eval_one("(symbol? t)", "nil");
 
+    /* format */
+    test_eval_one("(format \"hello ~a\" \"world\")", "\"hello world\"");
+    test_eval_one("(format \"~a bottles of ~a\" 99 \"beer\")", "\"99 bottles of beer\"");
+    test_eval_one("(format \"no args\")", "\"no args\"");
+    test_eval_one("(format \"x=~a y=~a\" 1 2)", "\"x=1 y=2\"");
+    test_eval_one("(format \"tilde: ~~\")", "\"tilde: ~\"");
+    test_eval_one("(format \"type: ~a\" 'foo)", "\"type: foo\"");
+
     /* substring */
     test_eval_one("(substring \"hello\" 1 3)", "\"el\"");
     test_eval_one("(substring \"abcdef\" 0 3)", "\"abc\"");

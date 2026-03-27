@@ -66,5 +66,19 @@
 (display "+ is: ")
 (println (describe +))
 
+;; === format — string interpolation ===
+
+(display "--- format ---")
+(newline)
+
+(println (format "~a bottles of ~a on the wall" 99 "beer"))
+(println (format "~a + ~a = ~a" 2 3 (+ 2 3)))
+(println (format "hello ~a, you are ~a years old" "alice" 30))
+(println (format "escape: ~~ is a tilde"))
+
+;; format + do loop for formatted output
+(do ((i 3 (- i 1))) ((= i 0) nil) (println (format "  T-~a..." i)))
+(println (format "  Liftoff!"))
+
 (display "--- done ---")
 (newline)

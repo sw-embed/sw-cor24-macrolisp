@@ -88,6 +88,7 @@ int wind_depth;                    /* current wind stack depth */
 #define PRIM_DYN_WIND   42
 #define PRIM_SYMBOLP    43
 #define PRIM_SUBSTR     44
+#define PRIM_FORMAT     45
 
 /* --- Extended object accessors --- */
 
@@ -289,6 +290,44 @@ int apply_primitive(int id, int args) {
     if (id == PRIM_SYMBOLP) {
         if (IS_SYMBOL(a) && !IS_NIL(a) && a != T_VAL) return T_VAL;
         return NIL_VAL;
+    }
+    if (id == PRIM_FORMAT) {
+        /* (format fmt-string args...) — ~a = display, ~~ = literal ~ */
+        char *fmt = string_data(a);
+        int flen = string_len(a);
+        int fargs = cdr(args);
+        char buf[256];
+        int bi = 0;
+        int fi = 0;
+        while (fi < flen && bi < 254) {
+            if (fmt[fi] == '~' && fi + 1 < flen) {
+                fi = fi + 1;
+                if (fmt[fi] == 'a' && !IS_NIL(fargs)) {
+                    int arg = car(fargs);
+                    fargs = cdr(fargs);
+                    /* Convert arg to string data */
+                    char *s = 0;
+                    int sl = 0;
+                    if (is_string(arg)) {
+                        s = string_data(arg); sl = string_len(arg);
+                    } else if (IS_FIXNUM(arg)) {
+                        int sv = apply_primitive(PRIM_NUM_TO_STR, cons(arg, NIL_VAL));
+                        s = string_data(sv); sl = string_len(sv);
+                    } else if (IS_SYMBOL(arg)) {
+                        s = sym_name(arg); sl = 0;
+                        while (s[sl]) sl = sl + 1;
+                    }
+                    if (s) { int si = 0; while (si < sl && bi < 254) { buf[bi] = s[si]; bi = bi + 1; si = si + 1; } }
+                } else if (fmt[fi] == '~') {
+                    buf[bi] = '~'; bi = bi + 1;
+                }
+                fi = fi + 1;
+            } else {
+                buf[bi] = fmt[fi]; bi = bi + 1; fi = fi + 1;
+            }
+        }
+        buf[bi] = 0;
+        return make_string(buf, bi);
     }
     if (id == PRIM_SUBSTR) {
         /* (substring str start end) */
@@ -840,5 +879,6 @@ void eval_init() {
     register_prim("dynamic-wind", PRIM_DYN_WIND);
     register_prim("symbol?", PRIM_SYMBOLP);
     register_prim("substring", PRIM_SUBSTR);
+    register_prim("format", PRIM_FORMAT);
     gensym_counter = 0;
 }
