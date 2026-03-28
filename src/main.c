@@ -301,9 +301,14 @@ void test_eval() {
     test_eval_one("(string-contains? \"hello\" \"xyz\")", "nil");
     test_eval_one("(string-contains? \"abcabc\" \"cab\")", "t");
 
-    /* letrec — mutually recursive bindings */
+    /* letrec — Scheme-style mutually recursive bindings */
     test_eval_one("(letrec ((f (lambda (n) (if (= n 0) 1 (* n (f (- n 1))))))) (f 5))", "120");
     test_eval_one("(letrec ((even? (lambda (n) (if (= n 0) t (odd? (- n 1))))) (odd? (lambda (n) (if (= n 0) nil (even? (- n 1)))))) (even? 4))", "t");
+
+    /* labels — CL-style local functions (no explicit lambda) */
+    test_eval_one("(labels ((f (n) (if (= n 0) 1 (* n (f (- n 1)))))) (f 5))", "120");
+    test_eval_one("(labels ((even? (n) (if (= n 0) t (odd? (- n 1)))) (odd? (n) (if (= n 0) nil (even? (- n 1))))) (even? 4))", "t");
+    test_eval_one("(labels ((double (x) (* x 2)) (quad (x) (double (double x)))) (quad 3))", "12");
 
     /* case */
     test_eval_one("(case 2 ((1) 'one) ((2) 'two) ((3) 'three))", "two");
@@ -537,9 +542,13 @@ void load_prelude() {
     eval_str("(define values list)");
     eval_str("(define (call-with-values producer consumer) (apply consumer (producer)))");
 
-    /* letrec: (letrec ((var val) ...) body...) */
+    /* letrec: (letrec ((var val) ...) body...) — Scheme style */
     eval_str("(define (letrec-sets bindings) (if (null? bindings) nil (cons `(set! ,(caar bindings) ,(cadr (car bindings))) (letrec-sets (cdr bindings)))))");
     eval_str("(defmacro letrec (bindings . body) `((lambda ,(map car bindings) ,@(letrec-sets bindings) ,@body) ,@(map (lambda (b) nil) bindings)))");
+
+    /* labels: (labels ((f (x) body) ...) body...) — CL style */
+    eval_str("(define (labels-sets bindings) (if (null? bindings) nil (cons `(set! ,(caar bindings) (lambda ,(cadr (car bindings)) ,@(cdr (cdr (car bindings))))) (labels-sets (cdr bindings)))))");
+    eval_str("(defmacro labels (bindings . body) `((lambda ,(map car bindings) ,@(labels-sets bindings) ,@body) ,@(map (lambda (b) nil) bindings)))");
 
     /* Threading macros: -> threads x as first arg, ->> as last arg.
      * Two-form version; nest for more: (-> (-> x f) g) */

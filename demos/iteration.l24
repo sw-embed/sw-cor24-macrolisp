@@ -110,16 +110,18 @@
 (do ((i 3 (- i 1))) ((= i 0) nil) (println (format "  T-~a..." i)))
 (println (format "  Liftoff!"))
 
-;; === letrec — mutually recursive locals ===
+;; === labels — CL-style local functions ===
 
-(display "--- letrec ---")
+(display "--- labels ---")
 (newline)
 
+;; Mutual recursion without explicit lambda
 (display "even? 4: ")
-(println (letrec ((even? (lambda (n) (if (= n 0) t (odd? (- n 1))))) (odd? (lambda (n) (if (= n 0) nil (even? (- n 1)))))) (even? 4)))
+(println (labels ((even? (n) (if (= n 0) t (odd? (- n 1)))) (odd? (n) (if (= n 0) nil (even? (- n 1))))) (even? 4)))
 
-(display "odd? 3: ")
-(println (letrec ((even? (lambda (n) (if (= n 0) t (odd? (- n 1))))) (odd? (lambda (n) (if (= n 0) nil (even? (- n 1)))))) (odd? 3)))
+;; Local helper functions
+(display "quad 3: ")
+(println (labels ((double (x) (* x 2)) (quad (x) (double (double x)))) (quad 3)))
 
 ;; === case — multi-way dispatch ===
 
