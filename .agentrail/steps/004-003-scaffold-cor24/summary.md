@@ -1,0 +1,1 @@
+Scaffolded tml24c for COR24 target using tc24r compiler and cor24-run emulator. Created tml.h (24-bit tagged values), io.h (UART MMIO), heap.h (parallel-array cells with bump allocator), symbol.h (interning with name pool), print.h (value printer). All tests pass on emulator. Filed and helped fix 7 tc24r compiler bugs during bring-up.

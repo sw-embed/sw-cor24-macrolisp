@@ -1,8 +1,9 @@
 number = 6
 slug = "eval-core"
-status = "pending"
+status = "completed"
 description = "Implement eval with core special forms"
 role = "production"
 context_files = []
 created_at = "2026-03-23T14:30:00"
+completed_at = "2026-03-23T17:54:40"
 task_type = "c-compile-fix"

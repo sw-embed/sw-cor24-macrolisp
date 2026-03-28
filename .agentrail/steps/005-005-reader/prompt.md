@@ -1,0 +1,1 @@
+Implement S-expression reader in src/read.h. Parse from char* string input. Handle: whitespace, semicolon comments, ( ) list syntax, quote shorthand, integer literals, symbol names. Test by reading and printing expressions like (+ 1 2), (define x 42), (quote (a b c)). Pipeline: make && make run.
