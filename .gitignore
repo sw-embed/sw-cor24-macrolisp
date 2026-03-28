@@ -1,3 +1,5 @@
 *.o
 /tml24c
+/build/
 .DS_Store
+.claude/
