@@ -242,19 +242,32 @@ void cexpr(int expr, int env) {
 
     /* --- Special forms --- */
 
-    /* asm: emit raw assembly lines */
+    /* asm: emit raw assembly lines (strings verbatim, symbols as _G<n>)
+     * Strings emit a trailing newline unless followed by a symbol.
+     * Symbols emit their _G<n> label inline (no newline). */
     if (head == sym_asm) {
         int strs = args;
         while (!IS_NIL(strs)) {
             int s = car(strs);
-            if (!is_string(s)) {
-                puts_str("ERR:asm-not-str\n");
+            int next = cdr(strs);
+            if (is_string(s)) {
+                puts_str(string_data(s));
+                /* newline unless next arg is a symbol (concatenation) */
+                if (IS_NIL(next) || !IS_SYMBOL(car(next))) {
+                    putc_uart(10);
+                }
+            } else if (IS_SYMBOL(s)) {
+                cg_add(s);
+                ce_gr(s);
+                /* newline after symbol unless next is also a symbol */
+                if (IS_NIL(next) || !IS_SYMBOL(car(next))) {
+                    putc_uart(10);
+                }
+            } else {
+                puts_str("ERR:asm-bad-arg\n");
                 return;
             }
-            char *d = string_data(s);
-            puts_str(d);
-            putc_uart(10);
-            strs = cdr(strs);
+            strs = next;
         }
         return;
     }

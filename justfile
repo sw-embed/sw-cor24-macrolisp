@@ -31,6 +31,10 @@ build-bare:
     mkdir -p build
     {{tc24r}} src/repl-bare.c -o build/repl-bare.s
 
+build-compiler:
+    mkdir -p build
+    {{tc24r}} src/compiler.c -o build/compiler.s
+
 build-snapshot-save:
     mkdir -p build
     {{tc24r}} src/snapshot-save.c -o build/snapshot-save.s
@@ -102,7 +106,57 @@ eval-custom file prelude: build-bare
         {{cor24_run}} --run build/repl-bare.s --terminal --speed 0 -n 500000000 2>&1 | \
         grep -v -E '^Assembled |Executed [0-9]+ instructions|^\[CPU'
 
+# === Compile (Lisp to COR24 assembly) ===
+
+# Compile a .l24 file to .s assembly (output to stdout)
+compile file: build-compiler
+    #!/usr/bin/env bash
+    set -euo pipefail
+    { grep -v '^;;' "{{file}}"; printf '\004'; } | \
+        {{cor24_run}} --run build/compiler.s --terminal --speed 0 -n 500000000 2>&1 | \
+        grep -v -E '^Assembled |Executed [0-9]+ instructions|^\[CPU' > build/compiled.s
+    cat build/compiled.s
+
+# Compile a .l24 file and run the resulting .s
+run-compiled file: build-compiler
+    #!/usr/bin/env bash
+    set -euo pipefail
+    { grep -v '^;;' "{{file}}"; printf '\004'; } | \
+        {{cor24_run}} --run build/compiler.s --terminal --speed 0 -n 500000000 2>&1 | \
+        grep -v -E '^Assembled |Executed [0-9]+ instructions|^\[CPU' > build/compiled.s
+    {{cor24_run}} --run build/compiled.s --speed 0 -n 10000000 2>&1 | \
+        grep -v -E '^Assembled |Executed [0-9]+ instructions|^\[CPU'
+
+# Compile and run with UART input (for interrupt demos)
+run-compiled-uart file input: build-compiler
+    #!/usr/bin/env bash
+    set -euo pipefail
+    { grep -v '^;;' "{{file}}"; printf '\004'; } | \
+        {{cor24_run}} --run build/compiler.s --terminal --speed 0 -n 500000000 2>&1 | \
+        grep -v -E '^Assembled |Executed [0-9]+ instructions|^\[CPU' > build/compiled.s
+    {{cor24_run}} --run build/compiled.s --speed 0 -n 10000000 -u "{{input}}" 2>&1 | \
+        grep -v -E '^Assembled |Executed [0-9]+ instructions|^\[CPU'
+
 # === Tests ===
+
+# Test compiled asm output assembles and runs correctly
+test-asm: build-compiler
+    #!/usr/bin/env bash
+    set -euo pipefail
+    echo "Running asm compiler tests..."
+    # Compile isr-echo demo
+    { grep -v '^;;' demos/isr-echo.l24; printf '\004'; } | \
+        {{cor24_run}} --run build/compiler.s --terminal --speed 0 -n 500000000 2>&1 | \
+        grep -v -E '^Assembled |Executed [0-9]+ instructions|^\[CPU' > build/test-asm.s
+    # Verify it assembles and runs (echo "AB" back)
+    output=$({{cor24_run}} --run build/test-asm.s --speed 0 -n 10000000 -u "AB" 2>&1 | \
+        grep 'UART output:' | sed 's/.*UART output: //')
+    if [ "$output" = "AB" ]; then
+        echo "asm ok"
+    else
+        echo "FAIL: expected 'AB', got '$output'"
+        exit 1
+    fi
 
 test: build
     #!/usr/bin/env bash
@@ -142,6 +196,10 @@ demo-bottles4: build-standard
 # Escape continuations and error handling
 demo-continuations: build-standard
     grep -v '^;;' demos/continuations.l24 | {{cor24_run}} --run build/repl-standard.s --terminal --speed 0 -n 500000000
+
+# Interrupt-driven UART echo (compiled Lisp + inline asm)
+demo-isr-echo: build-compiler
+    just run-compiled-uart demos/isr-echo.l24 "Hello, COR24!"
 
 # List available demos
 demos:

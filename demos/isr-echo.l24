@@ -1,0 +1,37 @@
+;; isr-echo.l24 -- Interrupt-driven UART echo
+;;
+;; Shows: Inline asm for ISR + compiled Lisp for main loop,
+;;        mixed asm/Lisp in one compiled program.
+;; Compile: just compile demos/isr-echo.l24
+;; Run:     just run-compiled-uart demos/isr-echo.l24 "Hello"
+;;
+;; The ISR reads a UART byte and echoes it back. The main program
+;; is a compiled Lisp spin loop. Interrupts do the work.
+
+;; Jump over ISR body
+(asm "        la   r0,_past_isr"
+     "        jmp  (r0)")
+
+;; ISR: read UART RX (acknowledges interrupt), echo to UART TX
+(asm "isr:"
+     "        push r0"
+     "        push r1"
+     "        la   r1,#xFF0100"
+     "        lb   r0,0(r1)"
+     "        sb   r0,0(r1)"
+     "        pop  r1"
+     "        pop  r0"
+     "        jmp  (ir)")
+
+(asm "_past_isr:")
+
+;; Install ISR and enable UART RX interrupt
+(asm "        la   r0,isr"
+     "        mov  iv,r0"
+     "        la   r1,#xFF0010"
+     "        lc   r0,1"
+     "        sb   r0,0(r1)")
+
+;; Spin forever -- compiled Lisp (interrupts do the work)
+(define spin (lambda () (spin)))
+(spin)
