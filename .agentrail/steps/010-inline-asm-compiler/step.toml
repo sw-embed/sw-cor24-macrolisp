@@ -1,0 +1,8 @@
+number = 10
+slug = "inline-asm-compiler"
+status = "in-progress"
+description = "Implement (asm ...) as a special form in the cross-compiler (compile.h). When..."
+role = "production"
+context_files = []
+created_at = "2026-03-28T21:41:38"
+task_type = "lisp-define-form"

@@ -27,6 +27,7 @@ int sym_unquote;
 int sym_unquote_splicing;
 int sym_set;
 int sym_catch;
+int sym_asm;
 int gensym_counter;
 
 /* --- Escape continuation support (catch/throw) --- */
@@ -860,6 +861,7 @@ void eval_init() {
     sym_unquote_splicing = intern("unquote-splicing");
     sym_set = intern("set!");
     sym_catch = intern("catch");
+    sym_asm = intern("asm");
 
     /* Initialize catch/throw state */
     catch_depth = 0;

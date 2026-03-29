@@ -1,0 +1,13 @@
+;; switch-led.l24 -- Light D2 when S2 is pressed
+;;
+;; Shows: Polling loop, switch input, LED output, memory-mapped I/O
+;; Prelude: standard (uses s2-pressed?, set-leds)
+;; Stack: 3 KB (default)
+;; Note: Click S2 in the hardware panel to toggle the switch.
+;;       LED D2 is active-low: write 0 to light, 1 to dark.
+
+(define switch-led (lambda ()
+  (set-leds (if (s2-pressed?) 0 1))
+  (switch-led)))
+(println "Polling S2... click the switch!")
+(switch-led)

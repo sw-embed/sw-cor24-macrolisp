@@ -242,6 +242,24 @@ void cexpr(int expr, int env) {
 
     /* --- Special forms --- */
 
+    /* asm: emit raw assembly lines */
+    if (head == sym_asm) {
+        int strs = args;
+        while (!IS_NIL(strs)) {
+            int s = car(strs);
+            if (!is_string(s)) {
+                puts_str("ERR:asm-not-str\n");
+                return;
+            }
+            char *d = string_data(s);
+            puts_str("        ");
+            puts_str(d);
+            putc_uart(10);
+            strs = cdr(strs);
+        }
+        return;
+    }
+
     /* quote */
     if (head == sym_quote) {
         cquote(car(args));

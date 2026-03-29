@@ -493,6 +493,20 @@ void test_compile() {
     puts_str("--- end compiler output ---\n");
 
     puts_str("compile ok\n");
+
+    /* Test asm special form */
+    compile_init();
+
+    int a3 = cons(read_str("(+ 1 2)"), NIL_VAL);
+    int a2 = cons(read_str("(define toggle-leds (lambda () (asm \"la r0,#xFF0000\" \"lw r1,0(r0)\" \"not r1\" \"sw r1,0(r0)\")))"), a3);
+    int a1 = cons(read_str("(asm \"nop\")"), a2);
+    int asm_prog = a1;
+
+    puts_str("--- asm compiler output ---\n");
+    compile_program(asm_prog);
+    puts_str("--- end asm compiler output ---\n");
+
+    puts_str("asm compile ok\n");
 }
 
 void eval_str(char *s) {
