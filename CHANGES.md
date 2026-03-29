@@ -47,3 +47,7 @@
 - **8fee6f0** Add eval, macroexpand, gensym, symbol->string, string->symbol (2026-03-24)
 - **f36161a** Add macroexpand-1 (primitive) and macroexpand (prelude), fix silent lookup (2026-03-24)
 - **1fae859** Add docs/usage.md with complete CLI reference (2026-03-24)
+- **0bb8129** Add build/ and .claude/ to .gitignore (2026-03-27)
+- **b20931b** Fix format stack corruption (tc24r BUG-013), add message and format-t (2026-03-27)
+- **79ae204** Remove format workaround after tc24r BUG-013 fix (2026-03-28)
+- Add docs/ml2asm.md: three approaches for Lisp-to-assembly integration (2026-03-28)
