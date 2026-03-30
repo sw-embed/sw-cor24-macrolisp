@@ -1,3 +1,5 @@
+> **Stabilized.** Will be migrated to [sw-embed/sw-cor24-macrolisp](https://github.com/sw-embed/sw-cor24-macrolisp) as part of the COR24 ecosystem consolidation. Bug fixes here will be carried forward.
+
 # tml24c
 
 Tiny Macro Lisp for COR24 — a minimal Lisp-1 with lexical scope, unhygienic defmacro, closures, mark-sweep GC, and tail-call optimization. Compiles to COR24 24-bit RISC assembly.
