@@ -1,1 +1,0 @@
-Implemented S-expression reader in src/read.h. Parses integers (positive/negative), symbols, proper lists, dotted pairs, and quote shorthand. Also fixed FIXNUM_VAL macro — COR24 uses logical right shift, so negative fixnums were broken. Added sign-extension function using |0xC00000 for the top 2 bits. All 12 reader tests pass on cor24-run.

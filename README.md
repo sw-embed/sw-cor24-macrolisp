@@ -1,12 +1,12 @@
-> **Stabilized.** Will be migrated to [sw-embed/sw-cor24-macrolisp](https://github.com/sw-embed/sw-cor24-macrolisp) as part of the COR24 ecosystem consolidation. Bug fixes here will be carried forward.
-
-# tml24c
+# sw-cor24-macrolisp
 
 Tiny Macro Lisp for COR24 — a minimal Lisp-1 with lexical scope, unhygienic defmacro, closures, mark-sweep GC, and tail-call optimization. Compiles to COR24 24-bit RISC assembly.
 
+> Forked from [sw-vibe-coding/tml24c](https://github.com/sw-vibe-coding/tml24c) as part of the [COR24 ecosystem consolidation](https://github.com/sw-embed/sw-cor24-project).
+
 Built on:
-- [tc24r](https://github.com/sw-vibe-coding/tc24r) — Tiny COR24 C compiler (Rust)
-- [cor24-rs](https://github.com/sw-embed/cor24-rs) — COR24 assembler and emulator
+- [sw-cor24-tinyc](https://github.com/sw-embed/sw-cor24-tinyc) — Tiny COR24 C compiler (Rust)
+- [sw-cor24-emulator](https://github.com/sw-embed/sw-cor24-emulator) — COR24 assembler and emulator
 
 ## Quick Start
 
@@ -50,9 +50,6 @@ just eval demos/mutation.l24   # set!, counters, memoization
 | [prelude-choices.md](docs/prelude-choices.md) | Prelude tiers (tiny/standard/full/experimental) |
 | [plan.md](docs/plan.md) | Implementation plan and future roadmap |
 | [bugs.md](docs/bugs.md) | Known issues |
-| [eval-file-plan.md](docs/eval-file-plan.md) | .l24 file evaluation workflow |
-| [fix-repl.md](docs/fix-repl.md) | REPL bug diagnosis and resolution |
-| [required-stack-changes.md](docs/required-stack-changes.md) | cor24-run stack configuration |
 
 ## License
 

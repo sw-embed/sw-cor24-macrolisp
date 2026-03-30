@@ -1,1 +1,0 @@
-Verified full toolchain integration: tc24r compiles C to COR24 assembly, cor24-run assembles and executes. All 5 test suites (scaffold, reader, eval, gc, compile) pass on COR24 emulator. Added make test target for automated validation with instruction limit to handle REPL loop.

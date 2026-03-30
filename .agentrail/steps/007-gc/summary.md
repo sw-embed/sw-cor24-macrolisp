@@ -1,1 +1,0 @@
-Implemented mark-sweep GC in src/gc.h: mark bitmap, free list allocation, root stack for temporaries, automatic collection on OOM. Modified heap.h alloc_cell to dispatch to GC allocator. Added tests verifying reachable data survives collection, freed cells are reused, and closures/recursion work post-GC. All tests pass on COR24.

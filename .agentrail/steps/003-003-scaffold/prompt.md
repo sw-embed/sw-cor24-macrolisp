@@ -1,1 +1,0 @@
-Set up C source structure: create src/tml.h (Value type, tags, macros, forward declarations), src/platform_host.c (stdio putchar/getchar/halt), src/heap.c (cell array, bump allocator), src/symbol.c (intern stub), update src/main.c to init heap and print startup message. Update Makefile to compile all src/*.c files. Verify make clean && make succeeds with zero warnings.

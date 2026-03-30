@@ -1,1 +1,0 @@
-Build a Tiny Macro Lisp system that compiles to COR24 assembly. Phase 1: lexer and parser. Phase 2: evaluator with core special forms. Phase 3: compiler targeting COR24 assembly. Phase 4: integration with tc24r and cor24-rs toolchain.

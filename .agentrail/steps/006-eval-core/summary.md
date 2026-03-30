@@ -1,1 +1,0 @@
-Implemented eval.h with full evaluator: 6 special forms (quote, if, define, lambda, defmacro, begin), 18 primitives, alist environments with lexical closures, macro expansion. All 40+ tests pass on COR24 including factorial recursion and higher-order closures.

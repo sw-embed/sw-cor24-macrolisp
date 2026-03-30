@@ -1,1 +1,0 @@
-Implement the Lisp lexer: tokenize parentheses, symbols, numbers, strings, and whitespace

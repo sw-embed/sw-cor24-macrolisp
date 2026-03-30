@@ -1,1 +1,0 @@
-Redo scaffold for COR24 target. CC=tc24r, run with cor24-run --run. No libc headers. Value=int (24-bit). I/O via UART MMIO 0xFF0100. Single-file build. Test pipeline: tc24r main.c -o main.s && cor24-run --run main.s
