@@ -59,3 +59,4 @@
 - **30155b7** Add docs/ml2asm-demos.md: compile pipeline and demo documentation (2026-03-28)
 - **f1aa074** Multi-module HAL demo: Lisp dispatches to 5 .s modules at 0x1000-0x5000 (2026-03-28)
 - **c66539d** Fix variadic arithmetic: +, -, * now fold over all args instead of first two (2026-03-29)
+- **f9f762a** Add reduce/range/map tests and reduce demo with fold patterns (2026-03-29)
