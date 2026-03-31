@@ -7,7 +7,7 @@ echo "=== sw-cor24-macrolisp — Tiny Macro Lisp for COR24 ==="
 
 # Verify tc24r and cor24-run are available
 if ! command -v tc24r &>/dev/null; then
-  echo "ERROR: tc24r not found. Build sw-cor24-tinyc first."
+  echo "ERROR: tc24r not found. Build sw-cor24-x-tinyc first."
   exit 1
 fi
 if ! command -v cor24-run &>/dev/null; then

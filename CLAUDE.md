@@ -11,7 +11,7 @@ Forked from [sw-vibe-coding/tml24c](https://github.com/sw-vibe-coding/tml24c).
 ## Related Projects
 
 - `~/github/sw-embed/sw-cor24-emulator` — COR24 assembler and emulator
-- `~/github/sw-embed/sw-cor24-tinyc` — Tiny COR24 C compiler (Rust)
+- `~/github/sw-embed/sw-cor24-x-tinyc` — Tiny COR24 C compiler (Rust)
 
 ## Build
 

@@ -5,7 +5,7 @@ Tiny Macro Lisp for COR24 — a minimal Lisp-1 with lexical scope, unhygienic de
 > Forked from [sw-vibe-coding/tml24c](https://github.com/sw-vibe-coding/tml24c) as part of the [COR24 ecosystem consolidation](https://github.com/sw-embed/sw-cor24-project).
 
 Built on:
-- [sw-cor24-tinyc](https://github.com/sw-embed/sw-cor24-tinyc) — Tiny COR24 C compiler (Rust)
+- [sw-cor24-x-tinyc](https://github.com/sw-embed/sw-cor24-x-tinyc) — Tiny COR24 C compiler (Rust)
 - [sw-cor24-emulator](https://github.com/sw-embed/sw-cor24-emulator) — COR24 assembler and emulator
 
 ## Quick Start
