@@ -3,12 +3,12 @@
 ;; Renders this notation as executable Lisp:
 ;;
 ;;   • power (N E) → (P) ← loop E times
-;;        ┌ 1 →
-;;        │ N (×)→
-;;        └
+;;        ⎧ 1 →
+;;        ⎨ N (×)→
+;;        ⎩
 ;;
 ;; The reader (src/read.h:26) accepts any non-whitespace, non-paren byte as a
-;; symbol byte, so UTF-8 multibyte glyphs (•, →, ←, ┌, │, └) parse as plain
+;; symbol byte, so UTF-8 multibyte glyphs (•, →, ←, ⎧, ⎨, ⎩) parse as plain
 ;; symbols. Two macros — • (define) and `loop` — bind those glyphs to ignored
 ;; positional params; they're scaffolding so the source mirrors the picture.
 ;;
@@ -32,14 +32,14 @@
 (defmacro • (name args _yields _result _binds body)
   `(define ,name (lambda ,args ,body)))
 
-;; (loop count times ┌ init │ op operand └)
+;; (loop count times ⎧ init ⎨ op operand ⎩)
 ;;   reads "loop COUNT times: start at INIT, step by op operand"
 ;;   = iterate count copies of (lambda (a) (op a operand)) over init
 (defmacro loop (count _times _top init _bar op operand _bot)
   `(iterate ,count (lambda (a) (,op a ,operand)) ,init))
 
 ;; --- The picture as code ---
-(• power (N E) → (P) ← (loop E times ┌ 1 │ * N └))
+(• power (N E) → (P) ← (loop E times ⎧ 1 ⎨ * N ⎩))
 
 ;; --- Verify ---
 (power 2 0)        ;; => 1
@@ -51,7 +51,7 @@
 (power 7 7)        ;; => 823543
 
 ;; --- See the rewrites ---
-(macroexpand-1 '(• power (N E) → (P) ← (loop E times ┌ 1 │ * N └)))
-(macroexpand-1 '(loop E times ┌ 1 │ * N └))
+(macroexpand-1 '(• power (N E) → (P) ← (loop E times ⎧ 1 ⎨ * N ⎩)))
+(macroexpand-1 '(loop E times ⎧ 1 ⎨ * N ⎩))
 
 (exit)
