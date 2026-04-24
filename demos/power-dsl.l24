@@ -2,19 +2,28 @@
 ;;
 ;; Renders this notation as executable Lisp:
 ;;
-;;   • power (N E) → (P) ← loop E times
-;;        ⎧ 1 →
-;;        ⎨ N (×)→
-;;        ⎩
+;;                          ⎧ 1 →
+;;   • power (N E) → (P) ← ⎨ N (×) → loop E times
+;;                          ⎩
 ;;
-;; The reader (src/read.h:26) accepts any non-whitespace, non-paren byte as a
-;; symbol byte, so UTF-8 multibyte glyphs (•, →, ←, ⎧, ⎨, ⎩) parse as plain
-;; symbols. Two macros — • (define) and `loop` — bind those glyphs to ignored
-;; positional params; they're scaffolding so the source mirrors the picture.
+;; The brace itself is the macro -- `⎧` in function position reshapes
+;; its positional args into an `iterate` call. `loop` and `times` are
+;; scaffolding symbols that occupy slots but aren't bound to anything.
 ;;
-;; Limitations: parens still group, so the 2D vertical brace flattens to one
-;; horizontal s-expression. Whitespace between glyphs is free; vertical
-;; alignment is purely visual.
+;; Brace glyphs are Unicode curly-brace pieces:
+;;   ⎧ U+23A7  LEFT CURLY BRACKET UPPER HOOK
+;;   ⎨ U+23A8  LEFT CURLY BRACKET MIDDLE PIECE
+;;   ⎩ U+23A9  LEFT CURLY BRACKET LOWER HOOK
+;;
+;; DSL-parsing fragility: `⎧` binds arguments by position. Every
+;; scaffolding glyph (⎨, loop, times, ⎩) is a slot in the parameter
+;; list, not a recognized keyword. Swap two tokens -- write
+;; "⎧ 1 ⎨ * N loop E times ⎩" instead of "⎧ 1 ⎨ N * loop E times ⎩"
+;; -- and the macro silently binds `operand=*, op=N`, so the emitted
+;; iterate call is nonsense but still compiles. A production DSL
+;; parser would validate keyword positions; this demo trusts the
+;; author to match the picture exactly.
+;;
 ;; Prelude: standard
 ;; Stack: 3 KB (default)
 ;; Run: just eval demos/power-dsl.l24
@@ -24,22 +33,23 @@
   (lambda (n f init)
     (if (= n 0) init (iterate (- n 1) f (f init)))))
 
-;; --- Glyph macros ---
-
-;; (• name (args) → (result) ← body)
-;;   The (result) slot is decorative — the macro doesn't bind anything to it,
-;;   it just makes the signature read like the picture.
-(defmacro • (name args _yields _result _binds body)
+;; --- `•` — binds the function head (name, args, decorative arrows) ---
+(defmacro • (name args _arrow _result _binds body)
   `(define ,name (lambda ,args ,body)))
 
-;; (loop count times ⎧ init ⎨ op operand ⎩)
-;;   reads "loop COUNT times: start at INIT, step by op operand"
-;;   = iterate count copies of (lambda (a) (op a operand)) over init
-(defmacro loop (count _times _top init _bar op operand _bot)
+;; --- `⎧` — the brace IS the loop; 8 positional args ---
+;;
+;; (⎧ init ⎨ operand op loop count times ⎩)
+;;   init     = initial accumulator
+;;   operand  = constant combined with acc each step
+;;   op       = combining operator
+;;   count    = number of iterations
+;;   ⎨, loop, times, ⎩ = ignored scaffolding; positions anchor the parse.
+(defmacro ⎧ (init _mid operand op _loop count _times _bot)
   `(iterate ,count (lambda (a) (,op a ,operand)) ,init))
 
 ;; --- The picture as code ---
-(• power (N E) → (P) ← (loop E times ⎧ 1 ⎨ * N ⎩))
+(• power (N E) → (P) ← (⎧ 1 ⎨ N * loop E times ⎩))
 
 ;; --- Verify ---
 (power 2 0)        ;; => 1
@@ -51,7 +61,7 @@
 (power 7 7)        ;; => 823543
 
 ;; --- See the rewrites ---
-(macroexpand-1 '(• power (N E) → (P) ← (loop E times ⎧ 1 ⎨ * N ⎩)))
-(macroexpand-1 '(loop E times ⎧ 1 ⎨ * N ⎩))
+(macroexpand-1 '(• power (N E) → (P) ← (⎧ 1 ⎨ N * loop E times ⎩)))
+(macroexpand-1 '(⎧ 1 ⎨ N * loop E times ⎩))
 
 (exit)
