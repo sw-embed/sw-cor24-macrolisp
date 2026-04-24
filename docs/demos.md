@@ -32,6 +32,7 @@ All demos are in the `demos/` directory. Run with `just eval demos/<name>.l24` o
 | `fuzzy-eq.l24` | Macro-as-DSL | `just eval demos/fuzzy-eq.l24` | `if~=` reads as `if a ~= b +/- e then X else Y` — keyword params as visual scaffolding |
 | `percent-tol.l24` | Hygienic DSL macro | `just eval demos/percent-tol.l24` | `if-close?` percentage-tolerance comparison with gensym-based single-evaluation |
 | `power.l24` | TCO accumulator | `just eval demos/power.l24` | Integer N^E via tail-recursive accumulator; demonstrates the 22-bit fixnum overflow |
+| `power-dsl.l24` | Glyph macro DSL | `just eval demos/power-dsl.l24` | Same `power` rendered in Unicode glyphs (•, →, ←, ┌, │, └) — shows how UTF-8 multibyte symbols slot into macro params |
 
 ## Applications
 

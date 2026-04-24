@@ -1,0 +1,57 @@
+;; power-dsl.l24 -- Power expressed in a glyph-based DSL
+;;
+;; Renders this notation as executable Lisp:
+;;
+;;   • power (N E) → (P) ← loop E times
+;;        ┌ 1 →
+;;        │ N (×)→
+;;        └
+;;
+;; The reader (src/read.h:26) accepts any non-whitespace, non-paren byte as a
+;; symbol byte, so UTF-8 multibyte glyphs (•, →, ←, ┌, │, └) parse as plain
+;; symbols. Two macros — • (define) and `loop` — bind those glyphs to ignored
+;; positional params; they're scaffolding so the source mirrors the picture.
+;;
+;; Limitations: parens still group, so the 2D vertical brace flattens to one
+;; horizontal s-expression. Whitespace between glyphs is free; vertical
+;; alignment is purely visual.
+;; Prelude: standard
+;; Stack: 3 KB (default)
+;; Run: just eval demos/power-dsl.l24
+
+;; --- Runtime: apply f n times to init (tail-recursive accumulator) ---
+(define iterate
+  (lambda (n f init)
+    (if (= n 0) init (iterate (- n 1) f (f init)))))
+
+;; --- Glyph macros ---
+
+;; (• name (args) → (result) ← body)
+;;   The (result) slot is decorative — the macro doesn't bind anything to it,
+;;   it just makes the signature read like the picture.
+(defmacro • (name args _yields _result _binds body)
+  `(define ,name (lambda ,args ,body)))
+
+;; (loop count times ┌ init │ op operand └)
+;;   reads "loop COUNT times: start at INIT, step by op operand"
+;;   = iterate count copies of (lambda (a) (op a operand)) over init
+(defmacro loop (count _times _top init _bar op operand _bot)
+  `(iterate ,count (lambda (a) (,op a ,operand)) ,init))
+
+;; --- The picture as code ---
+(• power (N E) → (P) ← (loop E times ┌ 1 │ * N └))
+
+;; --- Verify ---
+(power 2 0)        ;; => 1
+(power 2 1)        ;; => 2
+(power 2 10)       ;; => 1024
+(power 3 4)        ;; => 81
+(power 5 6)        ;; => 15625
+(power 10 5)       ;; => 100000
+(power 7 7)        ;; => 823543
+
+;; --- See the rewrites ---
+(macroexpand-1 '(• power (N E) → (P) ← (loop E times ┌ 1 │ * N └)))
+(macroexpand-1 '(loop E times ┌ 1 │ * N └))
+
+(exit)

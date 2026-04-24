@@ -1,5 +1,9 @@
 # Changelog
 
+## 2026-04-24
+
+- Added `demos/power-dsl.l24` — `power` rewritten in a glyph macro DSL using Unicode (•, →, ←, ┌, │, └). Demonstrates that the reader's symbol-byte rule (`src/read.h:26`) accepts UTF-8 multibyte glyphs as ordinary symbols, so they can fill positional macro params as visual scaffolding
+
 ## 2026-04-23
 
 - Added `demos/infix.l24` — fake infix syntax via macros (binary `$`, variadic `infix` with left-to-right associativity)
