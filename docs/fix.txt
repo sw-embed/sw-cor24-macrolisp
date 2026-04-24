@@ -1,0 +1,14 @@
+; what you implemented/demoed:
+
+;;   • Power (n : ℤ  e : ℤ) → (p : ℤ) ← loop e times    iff e is positive
+;;        ⎧ 1 →
+;;        ⎨ n (×) →
+;;        ⎩
+;
+
+; but, what I want is:
+
+;                             ;         ⎧ 1 →
+;;   • Power (n : ℤ  e : ℤ) → (p : ℤ) ← ⎨ loop e times    iff e is positive
+;;                                      ⎩ n (×) → 
+;
