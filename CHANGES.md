@@ -3,6 +3,7 @@
 ## 2026-04-24
 
 - Added `demos/power-dsl.l24` — `power` rewritten in a glyph macro DSL using Unicode (•, →, ←, ┌, │, └). Demonstrates that the reader's symbol-byte rule (`src/read.h:26`) accepts UTF-8 multibyte glyphs as ordinary symbols, so they can fill positional macro params as visual scaffolding
+- Added `demos/power-dsl-iff.l24` — extended glyph DSL with type annotations (`n : ℤ`) and an `iff e is positive` precondition clause. The macro strips type triples from the arglist and rewrites the iff-tail into `(assert (positive? e))` that runs before the body; e ≤ 0 raises "assertion failed"
 
 ## 2026-04-23
 

@@ -1,0 +1,84 @@
+;; power-dsl-iff.l24 -- Power in the glyph DSL with type annotations and iff-assert
+;;
+;; Renders this notation as executable Lisp:
+;;
+;;   • Power (n : ℤ  e : ℤ) → (p : ℤ) ← loop e times    iff e is positive
+;;        ┌ 1 →
+;;        │ n (×)→
+;;        └
+;;
+;; Extends demos/power-dsl.l24 with two new ideas:
+;;   1. Type annotations -- "n : ℤ" reads as "n is an integer". The macro
+;;      strips the (: type) triples and only the names reach the lambda's
+;;      arglist. Spaces around : are required (the reader treats : as a
+;;      symbol byte, so "n:ℤ" would tokenize as one symbol).
+;;   2. iff-assert -- "iff e is positive" expands to (assert (positive? e))
+;;      which runs before the body. Failure raises "assertion failed" via
+;;      the standard prelude's assert.
+;;
+;; Prelude: standard
+;; Stack: 3 KB (default)
+;; Run: just eval demos/power-dsl-iff.l24
+
+;; --- Runtime: same iterate as demos/power-dsl.l24 ---
+(define iterate
+  (lambda (n f init)
+    (if (= n 0) init (iterate (- n 1) f (f init)))))
+
+;; --- Type-annotation stripper: (n : ℤ e : ℤ) -> (n e) ---
+(define strip-types
+  (lambda (args)
+    (if (null? args) nil
+        (cons (car args)
+              (strip-types (cdr (cdr (cdr args))))))))
+
+;; --- iff-clause builder ---
+;; tail nil                  -> t                  (no precondition)
+;; tail (iff <var> is <pred>) -> (<pred>? <var>)   (e.g. (positive? e))
+(define build-iff
+  (lambda (tail)
+    (if (null? tail)
+        't
+        (list (string->symbol
+                (string-append (symbol->string (nth 3 tail)) "?"))
+              (nth 1 tail)))))
+
+;; --- Glyph macros ---
+
+;; (• name (typed-args...) → (typed-result) ← body [iff <var> is <pred>])
+;;
+;; The (typed-result) slot is decorative. The optional iff-tail becomes an
+;; (assert ...) that runs before body. Without iff, asserts (assert t).
+(defmacro • (name args _arrow _result _binds body . tail)
+  `(define ,name
+     (lambda ,(strip-types args)
+       (begin
+         (assert ,(build-iff tail))
+         ,body))))
+
+;; (loop count times ┌ init │ op operand └)  -- same as power-dsl.l24
+(defmacro loop (count _times _top init _bar op operand _bot)
+  `(iterate ,count (lambda (a) (,op a ,operand)) ,init))
+
+;; --- The picture as code ---
+(• Power (n : ℤ e : ℤ) → (p : ℤ) ← (loop e times ┌ 1 │ * n └) iff e is positive)
+
+;; --- Verify: positive e computes correctly ---
+(Power 2 1)        ;; => 2
+(Power 2 10)       ;; => 1024
+(Power 3 4)        ;; => 81
+(Power 5 6)        ;; => 15625
+(Power 10 5)       ;; => 100000
+(Power 7 7)        ;; => 823543
+
+;; --- Precondition triggers: e <= 0 raises "assertion failed" ---
+;; with-handler catches the raise and returns the message as a value.
+(with-handler (lambda (msg) msg) (lambda () (Power 2 0)))    ;; => "assertion failed"
+(with-handler (lambda (msg) msg) (lambda () (Power 2 -1)))   ;; => "assertion failed"
+(with-handler (lambda (msg) msg) (lambda () (Power 5 -3)))   ;; => "assertion failed"
+
+;; --- See the rewrite ---
+(macroexpand-1
+  '(• Power (n : ℤ e : ℤ) → (p : ℤ) ← (loop e times ┌ 1 │ * n └) iff e is positive))
+
+(exit)
