@@ -2,8 +2,12 @@
 
 ## 2026-04-24
 
-- Added `demos/power-dsl.l24` — `power` rewritten in a glyph macro DSL using Unicode (•, →, ←, ┌, │, └). Demonstrates that the reader's symbol-byte rule (`src/read.h:26`) accepts UTF-8 multibyte glyphs as ordinary symbols, so they can fill positional macro params as visual scaffolding
-- Added `demos/power-dsl-iff.l24` — extended glyph DSL with type annotations (`n : ℤ`) and an `iff e is positive` precondition clause. The macro strips type triples from the arglist and rewrites the iff-tail into `(assert (positive? e))` that runs before the body; e ≤ 0 raises "assertion failed"
+- `cd6732b` `demos/fuzzy-eq.l24`: demonstrate the Unicode-glyph variant — add a runnable `(defmacro if≈ …)` section alongside the ASCII `if~=` form, using real math symbols (≈ U+2248, ± U+00B1) for the infix keywords.
+- `a6396f3` Add `demos/power-dsl.l24` — `power` rewritten in a glyph macro DSL. Initial form used DOS-style box corners (┌│└) as positional scaffolding; demonstrates that the reader's symbol-byte rule (`src/read.h:26`) accepts UTF-8 multibyte glyphs as ordinary symbols.
+- `8985db2` Add `demos/power-dsl-iff.l24` — extended glyph DSL with type annotations (`n : ℤ`) and an `iff e is positive` precondition. The macro strips type triples from the arglist and rewrites the iff-tail into `(assert (positive? e))`; e ≤ 0 raises "assertion failed".
+- `73a9152` Fix Power DSL demos: swap DOS corners (┌│└) for Unicode curly-brace pieces (⎧⎨⎩, U+23A7/23A8/23A9); move `iff` inside `loop` (between `times` and the body brace) so it visually tracks the loop control; define `assert` locally in the iff variant so the demo runs on any Standard snapshot (the web UI's cached snapshot predates the prelude's built-in `assert`).
+- `99761ce` Refactor Power DSL: the curly brace `⎧⎨⎩` is the macro. `loop`/`iff` live inside the brace on the middle row, and `•` body reduces to the brace expression. Added DSL-parsing-fragility notes (positional binding silently breaks on token reorder).
+- `724c0e1` Match updated `docs/fix.txt` layout: relocate the per-step combination (operand, operator) to the `⎩` row; the middle row (`⎨`) carries only the loop control + `iff`. Flattened form: `(• Power (n : ℤ e : ℤ) → (p : ℤ) ← (⎧ 1 ⎨ loop e times iff e is positive ⎩ n *))`.
 
 ## 2026-04-23
 
