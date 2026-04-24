@@ -28,6 +28,9 @@ All demos are in the `demos/` directory. Run with `just eval demos/<name>.l24` o
 | `functional.l24` | fn?, compose, complement, every?, flatten, zip | `just eval-full demos/functional.l24` | Function combinators, list predicates, flatten/zip utilities |
 | `errors.l24` | Error messages | `just eval demos/errors.l24` | Evaluator error behavior: type errors, unbound symbols |
 | `scheme.l24` | Scheme prelude | `just eval-scheme demos/scheme.l24` | R7RS-style naming: let*, cond/else, even?/odd?, equal? |
+| `infix.l24` | Macros as syntax | `just eval demos/infix.l24` | Fake infix expressions: binary `$` and variadic `infix` (left-to-right, no precedence) |
+| `fuzzy-eq.l24` | Macro-as-DSL | `just eval demos/fuzzy-eq.l24` | `if~=` reads as `if a ~= b +/- e then X else Y` — keyword params as visual scaffolding |
+| `percent-tol.l24` | Hygienic DSL macro | `just eval demos/percent-tol.l24` | `if-close?` percentage-tolerance comparison with gensym-based single-evaluation |
 
 ## Applications
 

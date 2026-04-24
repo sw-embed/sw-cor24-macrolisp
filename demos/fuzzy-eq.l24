@@ -1,0 +1,37 @@
+;; fuzzy-eq.l24 -- Fuzzy-equality if-expression: "if a ≈ b ± e then X else Y"
+;;
+;; Shows: a single macro that mirrors the surface syntax of the math notation.
+;;        The keyword symbols (~=, +/-, then, else) are bound to ignored params --
+;;        they're just visual scaffolding so the call reads like the spec.
+;; Prelude: standard
+;; Stack: 3 KB (default)
+;; Run: just eval demos/fuzzy-eq.l24
+
+;; (if~= a ~= b +/- e then X else Y)
+;;   =>  (if (<= (abs (- a b)) e) X Y)
+(defmacro if~= (a _approx b _pm e _then X _else Y)
+  `(if (<= (abs (- ,a ,b)) ,e) ,X ,Y))
+
+;; --- Reads like the math ---
+(if~= 10 ~= 12 +/- 3 then 'close else 'far)        ;; => close   (|10-12|=2 <= 3)
+(if~= 10 ~= 12 +/- 1 then 'close else 'far)        ;; => far     (|10-12|=2 > 1)
+(if~=  5 ~=  5 +/- 0 then 'exact else 'off)        ;; => exact   (boundary)
+(if~= 100 ~= 97 +/- 5 then 'close else 'far)       ;; => close
+(if~= -3 ~= 3 +/- 5 then 'close else 'far)         ;; => close   (|-3-3|=6? no, => far)
+
+;; --- Use it inside a function ---
+(define near-target?
+  (lambda (sample target)
+    (if~= sample ~= target +/- 2 then t else nil)))
+
+(near-target? 100 101)    ;; => t
+(near-target? 100 105)    ;; => nil
+
+;; --- Verify the rewrite ---
+(macroexpand-1 '(if~= a ~= b +/- e then X else Y))
+
+;; Note: Unicode glyphs work too -- the lexer accepts any non-whitespace,
+;; non-paren byte (see src/read.h:26). The same macro can be defined as `if~~`
+;; or even literally as `if≈` and called with `≈` and `±` keywords.
+
+(exit)

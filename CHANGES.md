@@ -1,5 +1,12 @@
 # Changelog
 
+## 2026-04-23
+
+- Added `demos/infix.l24` — fake infix syntax via macros (binary `$`, variadic `infix` with left-to-right associativity)
+- Added `demos/fuzzy-eq.l24` — `if~=` DSL macro for `|a - b| <= e` comparisons with keyword-symbol scaffolding
+- Added `demos/percent-tol.l24` — `if-close?` percentage-tolerance comparison using integer arithmetic (`100*|α-β| <= ρ*max(|α|,|β|)`) with gensym hygiene for single evaluation
+- Registered the three new demos in `docs/demos.md`
+
 ## Fork Migration (2026-03-30)
 
 Forked from [sw-vibe-coding/tml24c](https://github.com/sw-vibe-coding/tml24c)

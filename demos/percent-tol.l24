@@ -1,0 +1,43 @@
+;; percent-tol.l24 -- "Within ρ percent" comparison DSL
+;;
+;; Shows: percentage-tolerance equality as a macro -- pure integer math
+;;        (multiply through by 100), gensym-hygienic so each operand is
+;;        evaluated exactly once, surface syntax mirrors the spec.
+;;
+;; Predicate:  100 * |α - β|  <=  ρ * max(|α|, |β|)
+;;
+;; Prelude: standard
+;; Stack: 3 KB (default)
+;; Run: just eval demos/percent-tol.l24
+
+;; (if-close? alpha beta within rho % then X else Y)
+;;   alpha and beta are evaluated exactly once each (hygiene via gensym).
+(defmacro if-close? (a b _within rho _pct _then X _else Y)
+  (let ((ga (gensym)) (gb (gensym)))
+    `(let ((,ga ,a) (,gb ,b))
+       (if (<= (* (abs (- ,ga ,gb)) 100)
+               (* ,rho (max (abs ,ga) (abs ,gb))))
+           ,X ,Y))))
+
+;; --- Try it ---
+(if-close? 100 103 within 5 % then 'match else 'mismatch)   ;; => match     (3% off)
+(if-close? 100 110 within 5 % then 'match else 'mismatch)   ;; => mismatch  (10% off)
+(if-close? 200 190 within 5 % then 'match else 'mismatch)   ;; => match     (5%, boundary)
+(if-close?   0   0 within 5 % then 'match else 'mismatch)   ;; => match     (both zero)
+(if-close?   0   1 within 5 % then 'match else 'mismatch)   ;; => mismatch  (one zero)
+(if-close? 1000 1020 within 1 % then 'match else 'mismatch) ;; => mismatch  (2% off)
+(if-close? 1000 1009 within 1 % then 'match else 'mismatch) ;; => match     (<1% off)
+
+;; --- Use it as a sensor-reading guard ---
+(define reading-stable?
+  (lambda (now prev tolerance-pct)
+    (if-close? now prev within tolerance-pct % then t else nil)))
+
+(reading-stable? 512 515 1)    ;; => t   (well within 1%)
+(reading-stable? 512 530 1)    ;; => nil (~3.5% drift)
+(reading-stable? 512 530 5)    ;; => t
+
+;; --- Verify hygiene: each operand evaluated once ---
+(macroexpand-1 '(if-close? (read-sensor) target within 2 % then 'ok else 'drift))
+
+(exit)

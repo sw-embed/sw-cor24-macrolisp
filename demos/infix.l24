@@ -1,0 +1,40 @@
+;; infix.l24 -- Fake infix syntax via macros
+;;
+;; Shows: simple binary infix ($ a op b), variadic left-to-right (infix a op b op c ...),
+;;        macroexpand to verify the prefix transformation
+;; Prelude: standard
+;; Stack: 3 KB (default)
+;; Run: just eval demos/infix.l24
+
+;; --- Binary infix: rewrite (a op b) -> (op a b) ---
+;; The operator symbol ends up in function position via unquote.
+(defmacro $ (a op b) `(,op ,a ,b))
+
+($ 1 + 2)            ;; => 3
+($ 10 * 5)           ;; => 50
+($ 7 - 3)            ;; => 4
+($ 100 / 4)          ;; => 25
+
+;; --- Variadic infix: left-to-right associativity, no precedence ---
+;; (infix a op1 b op2 c op3 d) -> (op3 (op2 (op1 a b) c) d)
+(define infix-build
+  (lambda (acc rest)
+    (if (null? rest)
+        acc
+        (infix-build (list (car rest) acc (cadr rest))
+                     (cdr (cdr rest))))))
+
+(defmacro infix args (infix-build (car args) (cdr args)))
+
+(infix 1 + 2 + 3)        ;; => 6
+(infix 10 - 3 - 2)       ;; => 5      (left-to-right: (10-3)-2, NOT 10-(3-2))
+(infix 2 * 3 + 1)        ;; => 7      (left-to-right: (2*3)+1, NO * precedence)
+(infix 100 / 5 / 2)      ;; => 10
+(infix 1 + 2 * 3 + 4)    ;; => 13     (((1+2)*3)+4)
+
+;; --- Verify the rewrites ---
+(macroexpand '($ a + b))
+(macroexpand '(infix 1 + 2 * 3))
+(macroexpand '(infix a + b - c + d))
+
+(exit)
