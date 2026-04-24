@@ -11,6 +11,7 @@
 - `9e28d76` Backfill today's CHANGES.md section to one bullet per commit.
 - CLAUDE.md: add a "Changelog discipline" section requiring a `CHANGES.md` entry on every commit, and a "Sibling consumers" note reminding that the web UI must be rebuilt when `demos/*.l24` files change.
 - Added `demos/fuzzy-pct.l24` — `(if≈% α ≈ β ± ρ % then X else Y)` infix macro combining fuzzy-eq with percent-tolerance. Unicode and ASCII (`if~=%`) twins; gensym-hygienic so α and β evaluate exactly once. Pure integer math predicate `100·|α-β| ≤ ρ·max(|α|,|β|)`.
+- Extended `demos/fuzzy-pct.l24` with `aif≈%` anaphoric variant: `(aif≈% α ≈ β ± ρ %)` binds `it` to the signed delta and yields 0 when close, else `it`. Enables drift-aggregation patterns like `(reduce + 0 (map (lambda (s) (abs (aif≈% s ≈ target ± tol %))) samples))`.
 
 ## 2026-04-23
 

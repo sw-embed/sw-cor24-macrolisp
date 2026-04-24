@@ -64,4 +64,42 @@
 ;; --- Verify hygiene: each operand evaluated exactly once ---
 (macroexpand-1 '(if≈% (read-sensor) ≈ target ± 2 % then 'ok else 'drift))
 
+;; --- Anaphoric variant: (aif≈% α ≈ β ± ρ %) ---
+;;
+;; Binds `it` to the signed delta (α - β) and yields:
+;;   0    when the delta is within ρ percent of max(|α|,|β|)
+;;   it   otherwise  (use the caller-visible delta to drive recovery)
+;;
+;; Pattern: specializes the classic `aif` anaphora to a numerical
+;; tolerance test -- a single expression, no then/else clauses. Callers
+;; can treat the result as "how far off are we" with 0 meaning "close
+;; enough".
+(defmacro aif≈% (a _approx b _pm rho _pct)
+  (let ((ga (gensym)) (gb (gensym)))
+    `(let ((,ga ,a) (,gb ,b))
+       (let ((it (- ,ga ,gb)))
+         (if (<= (* (abs it) 100) (* ,rho (max (abs ,ga) (abs ,gb))))
+             0
+             it)))))
+
+;; --- Try aif≈% ---
+(aif≈% 100 ≈ 103 ± 5 %)     ;; => 0    (3% off, within 5% -- close)
+(aif≈% 100 ≈ 110 ± 5 %)     ;; => -10  (10% off, over tolerance -- signed delta)
+(aif≈% 200 ≈ 190 ± 5 %)     ;; => 0    (5% off, at the boundary)
+(aif≈% 1000 ≈ 1020 ± 1 %)   ;; => -20  (2% off, over 1% tolerance)
+(aif≈% 1000 ≈ 1009 ± 1 %)   ;; => 0    (<1% off)
+
+;; Aggregate absolute drift across a series of readings (0s drop out).
+(define total-drift
+  (lambda (samples target tol)
+    (reduce + 0
+            (map (lambda (s) (abs (aif≈% s ≈ target ± tol %)))
+                 samples))))
+
+(total-drift '(100 103 97 110 90) 100 5)   ;; => 20  (only 110 and 90 exceed 5%)
+(total-drift '(100 103 97 110 90) 100 15)  ;; => 0   (all within 15%)
+
+;; --- Verify the rewrite ---
+(macroexpand-1 '(aif≈% sample ≈ target ± tol %))
+
 (exit)
