@@ -30,8 +30,14 @@
 ;; --- Verify the rewrite ---
 (macroexpand-1 '(if~= a ~= b +/- e then X else Y))
 
-;; Note: Unicode glyphs work too -- the lexer accepts any non-whitespace,
-;; non-paren byte (see src/read.h:26). The same macro can be defined as `if~~`
-;; or even literally as `if≈` and called with `≈` and `±` keywords.
+;; --- Unicode glyphs work too ---
+;; The lexer accepts any non-whitespace, non-paren byte (see src/read.h:26),
+;; so we can define and call the macro with the real math symbols.
+(defmacro if≈ (a _approx b _pm e _then X _else Y)
+  `(if (<= (abs (- ,a ,b)) ,e) ,X ,Y))
+
+(if≈ 10 ≈ 12 ± 3 then 'close else 'far)       ;; => close
+(if≈ 10 ≈ 12 ± 1 then 'close else 'far)       ;; => far
+(if≈ 100 ≈ 97 ± 5 then 'close else 'far)      ;; => close
 
 (exit)
