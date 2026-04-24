@@ -1,0 +1,67 @@
+;; fuzzy-pct.l24 -- Fuzzy equality with percent tolerance
+;;
+;; Combines demos/fuzzy-eq.l24 (fuzzy comparison reads like math)
+;; and demos/percent-tol.l24 (percentage-tolerance test) into one
+;; infix macro that reads like the spec:
+;;
+;;     if α ≈ β ± ρ % then X else Y
+;;
+;; Predicate (pure integer math, no floating point):
+;;     100 × |α - β|  <=  ρ × max(|α|, |β|)
+;;
+;; Unicode glyphs (≈ U+2248, ± U+00B1) are just symbol bytes to the
+;; reader (`src/read.h:26`), so they work as positional keyword
+;; scaffolding. α and β are each evaluated exactly once via gensym.
+;;
+;; Prelude: standard
+;; Stack: 3 KB (default)
+;; Run: just eval demos/fuzzy-pct.l24
+
+;; --- (if≈% α ≈ β ± ρ % then X else Y) ---
+;;   expands to:
+;;     (let ((ga α) (gb β))
+;;       (if (<= (* (abs (- ga gb)) 100)
+;;               (* ρ (max (abs ga) (abs gb))))
+;;           X Y))
+(defmacro if≈% (a _approx b _pm rho _pct _then X _else Y)
+  (let ((ga (gensym)) (gb (gensym)))
+    `(let ((,ga ,a) (,gb ,b))
+       (if (<= (* (abs (- ,ga ,gb)) 100)
+               (* ,rho (max (abs ,ga) (abs ,gb))))
+           ,X ,Y))))
+
+;; --- ASCII twin: same macro body, plain-keyboard glyphs ---
+;;     (if~=% a ~= b +/- ρ % then X else Y)
+(defmacro if~=% (a _approx b _pm rho _pct _then X _else Y)
+  (let ((ga (gensym)) (gb (gensym)))
+    `(let ((,ga ,a) (,gb ,b))
+       (if (<= (* (abs (- ,ga ,gb)) 100)
+               (* ,rho (max (abs ,ga) (abs ,gb))))
+           ,X ,Y))))
+
+;; --- Try it (Unicode form) ---
+(if≈% 100 ≈ 103 ± 5 % then 'close else 'far)      ;; => close   (3%)
+(if≈% 100 ≈ 110 ± 5 % then 'close else 'far)      ;; => far     (10%)
+(if≈% 200 ≈ 190 ± 5 % then 'close else 'far)      ;; => close   (5%, boundary)
+(if≈%   0 ≈   0 ± 5 % then 'close else 'far)      ;; => close   (both zero)
+(if≈%   0 ≈   1 ± 5 % then 'close else 'far)      ;; => far     (one zero)
+(if≈% 1000 ≈ 1020 ± 1 % then 'close else 'far)    ;; => far     (2%)
+(if≈% 1000 ≈ 1009 ± 1 % then 'close else 'far)    ;; => close   (<1%)
+
+;; --- Try it (ASCII form) ---
+(if~=% 100 ~= 103 +/- 5 % then 'close else 'far)  ;; => close
+(if~=% 100 ~= 110 +/- 5 % then 'close else 'far)  ;; => far
+
+;; --- Sensor-reading guard ---
+(define reading-stable?
+  (lambda (now prev tolerance-pct)
+    (if≈% now ≈ prev ± tolerance-pct % then t else nil)))
+
+(reading-stable? 512 515 1)    ;; => t    (<1% drift)
+(reading-stable? 512 530 1)    ;; => nil  (~3.5% drift)
+(reading-stable? 512 530 5)    ;; => t
+
+;; --- Verify hygiene: each operand evaluated exactly once ---
+(macroexpand-1 '(if≈% (read-sensor) ≈ target ± 2 % then 'ok else 'drift))
+
+(exit)

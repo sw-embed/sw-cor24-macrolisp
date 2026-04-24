@@ -10,6 +10,7 @@
 - `724c0e1` Match updated `docs/fix.txt` layout: relocate the per-step combination (operand, operator) to the `⎩` row; the middle row (`⎨`) carries only the loop control + `iff`. Flattened form: `(• Power (n : ℤ e : ℤ) → (p : ℤ) ← (⎧ 1 ⎨ loop e times iff e is positive ⎩ n *))`.
 - `9e28d76` Backfill today's CHANGES.md section to one bullet per commit.
 - CLAUDE.md: add a "Changelog discipline" section requiring a `CHANGES.md` entry on every commit, and a "Sibling consumers" note reminding that the web UI must be rebuilt when `demos/*.l24` files change.
+- Added `demos/fuzzy-pct.l24` — `(if≈% α ≈ β ± ρ % then X else Y)` infix macro combining fuzzy-eq with percent-tolerance. Unicode and ASCII (`if~=%`) twins; gensym-hygienic so α and β evaluate exactly once. Pure integer math predicate `100·|α-β| ≤ ρ·max(|α|,|β|)`.
 
 ## 2026-04-23
 
