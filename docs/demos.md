@@ -31,6 +31,7 @@ All demos are in the `demos/` directory. Run with `just eval demos/<name>.l24` o
 | `infix.l24` | Macros as syntax | `just eval demos/infix.l24` | Fake infix expressions: binary `$` and variadic `infix` (left-to-right, no precedence) |
 | `fuzzy-eq.l24` | Macro-as-DSL | `just eval demos/fuzzy-eq.l24` | `if~=` reads as `if a ~= b +/- e then X else Y` — keyword params as visual scaffolding |
 | `percent-tol.l24` | Hygienic DSL macro | `just eval demos/percent-tol.l24` | `if-close?` percentage-tolerance comparison with gensym-based single-evaluation |
+| `power.l24` | TCO accumulator | `just eval demos/power.l24` | Integer N^E via tail-recursive accumulator; demonstrates the 22-bit fixnum overflow |
 
 ## Applications
 

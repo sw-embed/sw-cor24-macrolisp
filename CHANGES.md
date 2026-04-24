@@ -5,7 +5,9 @@
 - Added `demos/infix.l24` — fake infix syntax via macros (binary `$`, variadic `infix` with left-to-right associativity)
 - Added `demos/fuzzy-eq.l24` — `if~=` DSL macro for `|a - b| <= e` comparisons with keyword-symbol scaffolding
 - Added `demos/percent-tol.l24` — `if-close?` percentage-tolerance comparison using integer arithmetic (`100*|α-β| <= ρ*max(|α|,|β|)`) with gensym hygiene for single evaluation
-- Registered the three new demos in `docs/demos.md`
+- Added `demos/power.l24` — tail-recursive integer exponentiation `Power N E`; documents the 22-bit fixnum overflow
+- Added 33 test cases in `src/main.c` covering the three macro DSLs and `Power` (exercised on every `just test` run)
+- Registered the four new demos in `docs/demos.md`
 
 ## Fork Migration (2026-03-30)
 

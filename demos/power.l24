@@ -1,0 +1,48 @@
+;; power.l24 -- Integer exponentiation N^E via tail-recursive accumulator
+;;
+;; Shows: tail-recursive accumulator pattern (constant stack via TCO),
+;;        helper + wrapper composition, edge-case guard.
+;;
+;; CAVEAT: COR24 fixnums are 22-bit signed (~ ±2,097,151). Results outside
+;;         that range wrap silently in the underlying multiply --
+;;         e.g. (Power 7 8) is mathematically 5,764,801 but returns 1,570,497.
+;;         Power assumes E >= 0; negative E returns 0 (integer math fallback).
+;; Prelude: standard
+;; Stack: 3 KB (default)
+;; Run: just eval demos/power.l24
+
+;; Tail-recursive helper: accumulates n^e into acc.
+(define power-iter
+  (lambda (n e acc)
+    (if (= e 0)
+        acc
+        (power-iter n (- e 1) (* acc n)))))
+
+;; Public entry: Power N E -> N^E (integer).
+(define Power
+  (lambda (N E)
+    (if (< E 0) 0 (power-iter N E 1))))
+
+;; --- Basic / identity cases ---
+(Power 2 0)        ;; => 1     (anything^0)
+(Power 2 1)        ;; => 2     (anything^1)
+(Power 0 5)        ;; => 0     (0^positive)
+(Power 1 100)      ;; => 1     (1^anything; deep recursion handled by TCO)
+
+;; --- Reasonable powers (all fit in 22-bit) ---
+(Power 2 10)       ;; => 1024
+(Power 3 4)        ;; => 81
+(Power 5 6)        ;; => 15625
+(Power 10 5)       ;; => 100000
+(Power 7 7)        ;; => 823543
+
+;; --- Negative-E guard ---
+(Power 2 -1)       ;; => 0
+(Power 5 -3)       ;; => 0
+
+;; --- The 22-bit ceiling (silent wrap) ---
+;; Mathematically 5,764,801; comes back as 1,570,497 because the
+;; intermediate multiply overflows the 22-bit fixnum payload.
+(Power 7 8)
+
+(exit)

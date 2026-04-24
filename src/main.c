@@ -458,6 +458,60 @@ void test_eval() {
     test_eval_one("(map double (range 5))", "(0 2 4 6 8)");
     test_eval_one("(map inc '(10 20 30))", "(11 21 31)");
 
+    /* === macro DSLs (demos/infix.l24) === */
+    /* Binary infix: (a op b) -> (op a b) */
+    eval(read_str("(defmacro $ (a op b) `(,op ,a ,b))"), NIL_VAL);
+    test_eval_one("($ 1 + 2)", "3");
+    test_eval_one("($ 10 * 5)", "50");
+    test_eval_one("($ 7 - 3)", "4");
+    test_eval_one("($ 100 / 4)", "25");
+    test_eval_one("(macroexpand-1 '($ a + b))", "(+ a b)");
+
+    /* Variadic infix: left-to-right associativity */
+    eval(read_str("(define infix-build (lambda (acc rest) (if (null? rest) acc (infix-build (list (car rest) acc (cadr rest)) (cdr (cdr rest))))))"), NIL_VAL);
+    eval(read_str("(defmacro infix args (infix-build (car args) (cdr args)))"), NIL_VAL);
+    test_eval_one("(infix 1 + 2 + 3)", "6");
+    test_eval_one("(infix 10 - 3 - 2)", "5");
+    test_eval_one("(infix 2 * 3 + 1)", "7");        /* left-to-right, no precedence */
+    test_eval_one("(infix 100 / 5 / 2)", "10");
+    test_eval_one("(infix 1 + 2 * 3 + 4)", "13");   /* (((1+2)*3)+4) */
+
+    /* === macro DSLs (demos/fuzzy-eq.l24) === */
+    /* if~= a ~= b +/- e then X else Y -> (if (<= (abs (- a b)) e) X Y) */
+    eval(read_str("(defmacro if~= (a _approx b _pm e _then X _else Y) `(if (<= (abs (- ,a ,b)) ,e) ,X ,Y))"), NIL_VAL);
+    test_eval_one("(if~= 10 ~= 12 +/- 3 then 'close else 'far)", "close");
+    test_eval_one("(if~= 10 ~= 12 +/- 1 then 'close else 'far)", "far");
+    test_eval_one("(if~= 5 ~= 5 +/- 0 then 'exact else 'off)", "exact");
+    test_eval_one("(if~= 100 ~= 97 +/- 5 then 'close else 'far)", "close");
+    test_eval_one("(if~= -3 ~= 3 +/- 5 then 'close else 'far)", "far");
+
+    /* === macro DSLs (demos/percent-tol.l24) === */
+    /* if-close? with percentage tolerance, gensym-hygienic single-evaluation */
+    eval(read_str("(defmacro if-close? (a b _within rho _pct _then X _else Y) (let ((ga (gensym)) (gb (gensym))) `(let ((,ga ,a) (,gb ,b)) (if (<= (* (abs (- ,ga ,gb)) 100) (* ,rho (max (abs ,ga) (abs ,gb)))) ,X ,Y))))"), NIL_VAL);
+    test_eval_one("(if-close? 100 103 within 5 % then 'match else 'mismatch)", "match");
+    test_eval_one("(if-close? 100 110 within 5 % then 'match else 'mismatch)", "mismatch");
+    test_eval_one("(if-close? 200 190 within 5 % then 'match else 'mismatch)", "match");
+    test_eval_one("(if-close? 0 0 within 5 % then 'match else 'mismatch)", "match");
+    test_eval_one("(if-close? 0 1 within 5 % then 'match else 'mismatch)", "mismatch");
+    test_eval_one("(if-close? 1000 1009 within 1 % then 'match else 'mismatch)", "match");
+    test_eval_one("(if-close? 1000 1020 within 1 % then 'match else 'mismatch)", "mismatch");
+
+    /* === Power (demos/power.l24) === */
+    /* Tail-recursive integer exponentiation N^E */
+    eval(read_str("(define power-iter (lambda (n e acc) (if (= e 0) acc (power-iter n (- e 1) (* acc n)))))"), NIL_VAL);
+    eval(read_str("(define Power (lambda (N E) (if (< E 0) 0 (power-iter N E 1))))"), NIL_VAL);
+    test_eval_one("(Power 2 0)", "1");
+    test_eval_one("(Power 2 1)", "2");
+    test_eval_one("(Power 0 5)", "0");
+    test_eval_one("(Power 2 10)", "1024");
+    test_eval_one("(Power 3 4)", "81");
+    test_eval_one("(Power 5 6)", "15625");
+    test_eval_one("(Power 10 5)", "100000");
+    test_eval_one("(Power 7 7)", "823543");
+    test_eval_one("(Power 1 100)", "1");        /* TCO: deep recursion ok */
+    test_eval_one("(Power 2 -1)", "0");          /* negative-E guard */
+    test_eval_one("(Power 5 -3)", "0");
+
     puts_str("eval ok\n");
 }
 
