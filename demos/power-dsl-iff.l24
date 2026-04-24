@@ -3,12 +3,18 @@
 ;; Renders this notation as executable Lisp:
 ;;
 ;;                                      ⎧ 1 →
-;;   • Power (n : ℤ  e : ℤ) → (p : ℤ) ← ⎨ n (×) → loop e times   iff e is positive
-;;                                      ⎩
+;;   • Power (n : ℤ  e : ℤ) → (p : ℤ) ← ⎨ loop e times    iff e is positive
+;;                                      ⎩ n (×) →
 ;;
-;; The `← ⎨ … ⎩` arrow feeds into the middle row of the brace; the loop
-;; control and precondition share that row with the step expression,
-;; exactly as a mathematician would write it.
+;; Reading the brace top-to-bottom:
+;;   ⎧ — initial accumulator value (1)
+;;   ⎨ — the loop control with its precondition
+;;         (loop e times, provided e is positive)
+;;   ⎩ — the per-step combination (n, operator ×)
+;;
+;; The ← arrow on the middle picture row feeds into ⎨, exactly as a
+;; mathematician would draw it: set up the loop here, step rules
+;; below.
 ;;
 ;; Extends demos/power-dsl.l24 with two new ideas:
 ;;   1. Type annotations -- "n : ℤ" reads as "n is an integer". The •
@@ -23,14 +29,14 @@
 ;;   ⎨ U+23A8  LEFT CURLY BRACKET MIDDLE PIECE
 ;;   ⎩ U+23A9  LEFT CURLY BRACKET LOWER HOOK
 ;;
-;; DSL-parsing fragility: `⎧` binds arguments by position. Every
-;; scaffolding glyph (⎨, loop, times, iff, is, ⎩) is a slot in the
-;; parameter list, not a recognized keyword. Rearrange "loop e times"
-;; into "times e loop" and the macro silently binds `count=times,
-;; _times=e, _loop=loop`, so the emitted iterate iterates the symbol
-;; `times` (error) instead of the integer `e`. A production DSL parser
-;; would validate keyword positions; this demo trusts the author to
-;; match the picture exactly.
+;; DSL-parsing fragility: `⎧` binds arguments by position, not by
+;; keyword. Every scaffolding glyph (⎨, loop, times, iff, is, ⎩) is a
+;; slot in the parameter list. Rearrange "loop e times" into
+;; "times e loop" and the macro silently binds `_loop=times, count=e,
+;; _times=loop`, so the emitted iterate call is structurally fine but
+;; conceptually scrambled. A production DSL parser would validate
+;; keyword positions; this demo trusts the author to match the picture
+;; exactly.
 ;;
 ;; Prelude: standard
 ;; Stack: 3 KB (default)
@@ -56,17 +62,17 @@
 (defmacro • (name args _arrow _result _binds body)
   `(define ,name (lambda ,(strip-types args) ,body)))
 
-;; --- `⎧` — the brace carries init, step, loop, and precondition; 12 args ---
+;; --- `⎧` — the brace carries init, loop ctrl + precondition, step; 12 args ---
 ;;
-;; (⎧ init ⎨ operand op loop count times iff var is pred ⎩)
+;; (⎧ init ⎨ loop count times iff var is pred ⎩ operand op)
 ;;   Bound:
-;;     init     = initial accumulator
-;;     operand  = constant combined with acc each step
-;;     op       = combining operator
-;;     count    = number of iterations
-;;     var/pred = precondition "<pred>? <var>" must hold before looping
+;;     init     = initial accumulator               (⎧ row)
+;;     count    = number of iterations              (⎨ row)
+;;     var/pred = precondition "<pred>? <var>"      (⎨ row)
+;;     operand  = constant combined with acc        (⎩ row)
+;;     op       = combining operator                (⎩ row)
 ;;   Ignored scaffolding: ⎨ loop times iff is ⎩
-(defmacro ⎧ (init _mid operand op _loop count _times _iff var _is pred _bot)
+(defmacro ⎧ (init _mid _loop count _times _iff var _is pred _bot operand op)
   `(begin
      (assert (,(string->symbol
                  (string-append (symbol->string pred) "?"))
@@ -74,7 +80,7 @@
      (iterate ,count (lambda (a) (,op a ,operand)) ,init)))
 
 ;; --- The picture as code ---
-(• Power (n : ℤ e : ℤ) → (p : ℤ) ← (⎧ 1 ⎨ n * loop e times iff e is positive ⎩))
+(• Power (n : ℤ e : ℤ) → (p : ℤ) ← (⎧ 1 ⎨ loop e times iff e is positive ⎩ n *))
 
 ;; --- Positive e: computes correctly ---
 (Power 2 1)        ;; => 2
@@ -91,6 +97,6 @@
 
 ;; --- See the rewrite ---
 (macroexpand-1
-  '(• Power (n : ℤ e : ℤ) → (p : ℤ) ← (⎧ 1 ⎨ n * loop e times iff e is positive ⎩)))
+  '(• Power (n : ℤ e : ℤ) → (p : ℤ) ← (⎧ 1 ⎨ loop e times iff e is positive ⎩ n *)))
 
 (exit)
