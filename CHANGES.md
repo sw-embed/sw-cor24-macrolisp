@@ -8,6 +8,8 @@
 - `73a9152` Fix Power DSL demos: swap DOS corners (┌│└) for Unicode curly-brace pieces (⎧⎨⎩, U+23A7/23A8/23A9); move `iff` inside `loop` (between `times` and the body brace) so it visually tracks the loop control; define `assert` locally in the iff variant so the demo runs on any Standard snapshot (the web UI's cached snapshot predates the prelude's built-in `assert`).
 - `99761ce` Refactor Power DSL: the curly brace `⎧⎨⎩` is the macro. `loop`/`iff` live inside the brace on the middle row, and `•` body reduces to the brace expression. Added DSL-parsing-fragility notes (positional binding silently breaks on token reorder).
 - `724c0e1` Match updated `docs/fix.txt` layout: relocate the per-step combination (operand, operator) to the `⎩` row; the middle row (`⎨`) carries only the loop control + `iff`. Flattened form: `(• Power (n : ℤ e : ℤ) → (p : ℤ) ← (⎧ 1 ⎨ loop e times iff e is positive ⎩ n *))`.
+- `9e28d76` Backfill today's CHANGES.md section to one bullet per commit.
+- CLAUDE.md: add a "Changelog discipline" section requiring a `CHANGES.md` entry on every commit, and a "Sibling consumers" note reminding that the web UI must be rebuilt when `demos/*.l24` files change.
 
 ## 2026-04-23
 

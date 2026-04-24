@@ -27,3 +27,15 @@ just clean       # clean build artifacts
 ```
 
 Compiler flags: `-Wall -Wextra -Werror -std=c11`. Never suppress warnings.
+
+## Changelog discipline
+
+**Every commit updates `CHANGES.md`.** Before running `git commit`, add a one-line bullet to the current date's section (create the section if the date is new). Lead each bullet with the short commit SHA so the day reads as an ordered iteration log.
+
+No exceptions for "trivial" demo tweaks, doc updates, or test-only commits — if it's shipping, it belongs in the changelog.
+
+**If I'm about to commit without a CHANGES.md entry, stop and add one first.**
+
+## Sibling consumers
+
+`~/github/sw-embed/web-sw-cor24-macrolisp` embeds demo sources from `demos/*.l24` via `include_str!`. When a demo file changes here, the web UI needs to be rebuilt (`./scripts/build-pages.sh` over there) for the change to reach the live site — the web repo's `pages/` bundle is what GitHub Actions serves, and it captures these sources at build time.
