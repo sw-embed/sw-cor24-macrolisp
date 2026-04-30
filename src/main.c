@@ -808,10 +808,15 @@ void repl() {
             puts_str("> ");
             continue;
         }
-        int expr = read_str(line);
-        int result = eval(expr, global_env);
-        print_val(result);
-        putc_uart('\n');
+        read_ptr = line;
+        skip_whitespace();
+        while (*read_ptr) {
+            int expr = read_expr();
+            int result = eval(expr, global_env);
+            print_val(result);
+            putc_uart('\n');
+            skip_whitespace();
+        }
         puts_str("> ");
     }
 }

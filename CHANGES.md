@@ -1,5 +1,12 @@
 # Changelog
 
+## 2026-04-30
+
+- Fix REPL/compiler dropping all but the first form on a line: `(foo 42)(foo 42)` now runs both calls. Each driver was calling `read_str(line)` which only parses one expression — replaced with a drain loop that calls `read_expr` until end-of-buffer. Patched `src/repl-{standard,bare,minimal,full,scheme,snapshot}.c`, `src/main.c`, and `src/compiler.c`.
+- README: add standard epilog (Blog/Discord/YouTube links, Copyright, License) matching the `web-sw-cor24-basic` pattern.
+- Add `build-fullbig` / `eval-fullbig` diagnostic targets: full prelude with SP relocated to 0x100000 (top of SRAM, ~340 KB headroom) instead of the 3–8 KB EBR. Use to distinguish "C-stack budget too tight" from "unbounded recursion." Implemented as an awk pass that prepends `la r0,1048576; mov sp,r0` to the generated `_start`. Used to confirm `demos/functional.l24` peaks at ~3.2 KB stack (overflows the 3 KB default; fits comfortably in 8 KB).
+- Sibling sync: regenerated `web-sw-cor24-macrolisp/asm/repl-*.s` from current C source (picks up the drain-loop fix). Added `StackSize::SixteenKbSram` to the web UI (runtime-patches `_start` to relocate SP to SRAM 0x100000). Set Functional Toolkit demo to default to 16 KB SRAM stack.
+
 ## 2026-04-24
 
 - `cd6732b` `demos/fuzzy-eq.l24`: demonstrate the Unicode-glyph variant — add a runnable `(defmacro if≈ …)` section alongside the ASCII `if~=` form, using real math symbols (≈ U+2248, ± U+00B1) for the infix keywords.

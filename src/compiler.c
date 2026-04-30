@@ -33,15 +33,20 @@ int main() {
         int len = read_line(line, 1024);
         if (len < 0) break;
         if (len == 0) continue;
-        int expr = read_str(line);
-        if (IS_NIL(expr)) continue;
-        int cell = cons(expr, NIL_VAL);
-        if (IS_NIL(prog)) {
-            prog = cell;
-        } else {
-            heap_cdr[PTR_IDX(tail)] = cell;
+        read_ptr = line;
+        skip_whitespace();
+        while (*read_ptr) {
+            int expr = read_expr();
+            skip_whitespace();
+            if (IS_NIL(expr)) continue;
+            int cell = cons(expr, NIL_VAL);
+            if (IS_NIL(prog)) {
+                prog = cell;
+            } else {
+                heap_cdr[PTR_IDX(tail)] = cell;
+            }
+            tail = cell;
         }
-        tail = cell;
     }
 
     if (!IS_NIL(prog)) {

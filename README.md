@@ -51,6 +51,16 @@ just eval demos/mutation.l24   # set!, counters, memoization
 | [plan.md](docs/plan.md) | Implementation plan and future roadmap |
 | [bugs.md](docs/bugs.md) | Known issues |
 
+## Links
+
+- Blog: [Software Wrighter Lab](https://software-wrighter-lab.github.io/)
+- Discord: [Join the community](https://discord.com/invite/Ctzk5uHggZ)
+- YouTube: [Software Wrighter](https://www.youtube.com/@SoftwareWrighter)
+
+## Copyright
+
+Copyright (c) 2026 Michael A. Wright
+
 ## License
 
-MIT
+MIT -- see [LICENSE](LICENSE) for details.

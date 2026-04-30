@@ -23,6 +23,16 @@ build-full:
     mkdir -p build
     {{tc24r}} src/repl-full.c -o build/repl-full.s
 
+# Diagnostic build: full prelude with stack relocated to top of SRAM (~340 KB
+# headroom vs. EBR's hard 8 KB cap). Use to test whether a demo overflows due
+# to C-stack budget rather than an unbounded recursion.
+build-fullbig: build-full
+    #!/usr/bin/env bash
+    set -euo pipefail
+    # Patch _start to load sp = 0x100000 (top of SRAM, grows down) before calling _main
+    awk '/^_start:$/ {print; print "        la      r0,1048576"; print "        mov     sp,r0"; next} {print}' \
+        build/repl-full.s > build/repl-fullbig.s
+
 build-scheme:
     mkdir -p build
     {{tc24r}} src/repl-scheme.c -o build/repl-scheme.s
@@ -97,6 +107,14 @@ eval-scheme file: build-scheme
 eval-full file: build-full
     #!/usr/bin/env bash
     grep -v '^;;' "{{file}}" | {{cor24_run}} --run build/repl-full.s --terminal --speed 0 -n 500000000 2>&1 | \
+        grep -v -E '^Assembled |Executed [0-9]+ instructions|^\[CPU'
+
+# Evaluate with full prelude + relocated SRAM stack (diagnostic). If a demo
+# completes here but overflows under `eval-full`, the issue is C-stack budget,
+# not unbounded recursion.
+eval-fullbig file: build-fullbig
+    #!/usr/bin/env bash
+    grep -v '^;;' "{{file}}" | {{cor24_run}} --run build/repl-fullbig.s --terminal --speed 0 -n 500000000 2>&1 | \
         grep -v -E '^Assembled |Executed [0-9]+ instructions|^\[CPU'
 
 # Evaluate with custom prelude (slow: prelude loaded via UART)
