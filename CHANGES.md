@@ -2,6 +2,7 @@
 
 ## 2026-05-01
 
+- `prelude-full`: convert `take` to tail-recursive via `take-helper` accumulator + `reverse`.
 - `prelude-full`: convert `repeat` to tail-recursive via `repeat-helper` accumulator. All elements identical so cons-order doesn't matter; no reverse needed.
 - `prelude-full`: convert `range` to tail-recursive (count-down accumulator). Cuts `demos/functional.l24` peak C-stack from ~3.2 KB to ~2.6 KB — now fits in the 3 KB EBR default. Old form was `(cons i (range-helper (+ i 1) n))` which held a frame per element; new form is `(range-helper (- i 1) (cons i acc))`, no reverse needed since cons-from-the-tail builds in natural order.
 

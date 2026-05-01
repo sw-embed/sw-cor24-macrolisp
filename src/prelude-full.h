@@ -85,7 +85,8 @@ void load_prelude() {
     eval_str("(define range (lambda (n) (range-helper (- n 1) nil)))");
     eval_str("(define repeat-helper (lambda (n x acc) (if (= n 0) acc (repeat-helper (- n 1) x (cons x acc)))))");
     eval_str("(define repeat (lambda (n x) (repeat-helper n x nil)))");
-    eval_str("(define take (lambda (n lst) (if (= n 0) nil (if (null? lst) nil (cons (car lst) (take (- n 1) (cdr lst)))))))");
+    eval_str("(define take-helper (lambda (n lst acc) (if (= n 0) (reverse acc) (if (null? lst) (reverse acc) (take-helper (- n 1) (cdr lst) (cons (car lst) acc))))))");
+    eval_str("(define take (lambda (n lst) (take-helper n lst nil)))");
     eval_str("(define drop (lambda (n lst) (if (= n 0) lst (if (null? lst) nil (drop (- n 1) (cdr lst))))))");
     eval_str("(define zip (lambda (a b) (if (null? a) nil (if (null? b) nil (cons (list (car a) (car b)) (zip (cdr a) (cdr b)))))))");
     eval_str("(define flatten (lambda (lst) (if (null? lst) nil (if (pair? (car lst)) (append (flatten (car lst)) (flatten (cdr lst))) (cons (car lst) (flatten (cdr lst)))))))");
