@@ -1,5 +1,9 @@
 # Changelog
 
+## 2026-05-01
+
+- `prelude-full`: convert `range` to tail-recursive (count-down accumulator). Cuts `demos/functional.l24` peak C-stack from ~3.2 KB to ~2.6 KB — now fits in the 3 KB EBR default. Old form was `(cons i (range-helper (+ i 1) n))` which held a frame per element; new form is `(range-helper (- i 1) (cons i acc))`, no reverse needed since cons-from-the-tail builds in natural order.
+
 ## 2026-04-30
 
 - Fix REPL/compiler dropping all but the first form on a line: `(foo 42)(foo 42)` now runs both calls. Each driver was calling `read_str(line)` which only parses one expression — replaced with a drain loop that calls `read_expr` until end-of-buffer. Patched `src/repl-{standard,bare,minimal,full,scheme,snapshot}.c`, `src/main.c`, and `src/compiler.c`.

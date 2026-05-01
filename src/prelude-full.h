@@ -81,8 +81,8 @@ void load_prelude() {
     eval_str("(define none? (lambda (p lst) (every? (complement p) lst)))");
 
     /* List construction */
-    eval_str("(define range-helper (lambda (i n) (if (= i n) nil (cons i (range-helper (+ i 1) n)))))");
-    eval_str("(define range (lambda (n) (range-helper 0 n)))");
+    eval_str("(define range-helper (lambda (i acc) (if (< i 0) acc (range-helper (- i 1) (cons i acc)))))");
+    eval_str("(define range (lambda (n) (range-helper (- n 1) nil)))");
     eval_str("(define repeat (lambda (n x) (if (= n 0) nil (cons x (repeat (- n 1) x)))))");
     eval_str("(define take (lambda (n lst) (if (= n 0) nil (if (null? lst) nil (cons (car lst) (take (- n 1) (cdr lst)))))))");
     eval_str("(define drop (lambda (n lst) (if (= n 0) lst (if (null? lst) nil (drop (- n 1) (cdr lst))))))");
