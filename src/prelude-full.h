@@ -88,7 +88,8 @@ void load_prelude() {
     eval_str("(define take-helper (lambda (n lst acc) (if (= n 0) (reverse acc) (if (null? lst) (reverse acc) (take-helper (- n 1) (cdr lst) (cons (car lst) acc))))))");
     eval_str("(define take (lambda (n lst) (take-helper n lst nil)))");
     eval_str("(define drop (lambda (n lst) (if (= n 0) lst (if (null? lst) nil (drop (- n 1) (cdr lst))))))");
-    eval_str("(define zip (lambda (a b) (if (null? a) nil (if (null? b) nil (cons (list (car a) (car b)) (zip (cdr a) (cdr b)))))))");
+    eval_str("(define zip-helper (lambda (a b acc) (if (null? a) (reverse acc) (if (null? b) (reverse acc) (zip-helper (cdr a) (cdr b) (cons (list (car a) (car b)) acc))))))");
+    eval_str("(define zip (lambda (a b) (zip-helper a b nil)))");
     eval_str("(define flatten (lambda (lst) (if (null? lst) nil (if (pair? (car lst)) (append (flatten (car lst)) (flatten (cdr lst))) (cons (car lst) (flatten (cdr lst)))))))");
 
     /* String utilities */
