@@ -2,6 +2,7 @@
 
 ## 2026-05-01
 
+- `prelude-full`: convert `flatten` to tail-recursive work-list traversal. Doubly recursive form `(append (flatten car) (flatten cdr))` replaced with explicit work list + accumulator + reverse. Brings Functional Toolkit peak C-stack to ~2.24 KB (cumulative 31% reduction from the 3.26 KB starting point).
 - `prelude-full`: convert `zip` to tail-recursive via `zip-helper` accumulator + `reverse`.
 - `prelude-full`: convert `take` to tail-recursive via `take-helper` accumulator + `reverse`.
 - `prelude-full`: convert `repeat` to tail-recursive via `repeat-helper` accumulator. All elements identical so cons-order doesn't matter; no reverse needed.

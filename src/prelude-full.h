@@ -90,7 +90,8 @@ void load_prelude() {
     eval_str("(define drop (lambda (n lst) (if (= n 0) lst (if (null? lst) nil (drop (- n 1) (cdr lst))))))");
     eval_str("(define zip-helper (lambda (a b acc) (if (null? a) (reverse acc) (if (null? b) (reverse acc) (zip-helper (cdr a) (cdr b) (cons (list (car a) (car b)) acc))))))");
     eval_str("(define zip (lambda (a b) (zip-helper a b nil)))");
-    eval_str("(define flatten (lambda (lst) (if (null? lst) nil (if (pair? (car lst)) (append (flatten (car lst)) (flatten (cdr lst))) (cons (car lst) (flatten (cdr lst)))))))");
+    eval_str("(define flatten-helper (lambda (work acc) (if (null? work) (reverse acc) (if (null? (car work)) (flatten-helper (cdr work) acc) (if (pair? (car (car work))) (flatten-helper (cons (car (car work)) (cons (cdr (car work)) (cdr work))) acc) (flatten-helper (cons (cdr (car work)) (cdr work)) (cons (car (car work)) acc)))))))");
+    eval_str("(define flatten (lambda (lst) (flatten-helper (list lst) nil)))");
 
     /* String utilities */
     eval_str("(define ->str (lambda (x) (cond ((string? x) x) ((number? x) (number->string x)) (t \"\"))))");
