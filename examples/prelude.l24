@@ -4,8 +4,8 @@
 ;; To add custom definitions at startup, create your own prelude
 ;; and load it before your code:
 ;;
-;;   cat myprelude.l24 mycode.l24 | cor24-run --run build/repl.s --terminal --speed 0
-;;   ./scripts/load-eval.sh myprelude.l24  # then use the defined functions
+;;   just eval-custom mycode.l24 myprelude.l24      # prelude + code, batch eval
+;;   ./scripts/load-eval.sh mycode.l24 -p myprelude.l24  # same, via the helper
 ;;
 ;; Built-in prelude provides:
 ;;

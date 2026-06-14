@@ -8,7 +8,7 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 PROJECT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 
 cd "$PROJECT_DIR"
-just build-repl
+just build-standard
 
 if [[ "${1:-}" == "-e" ]]; then
     shift
@@ -19,9 +19,13 @@ else
     INPUT=$(grep -v '^;;' "$FILE")
 fi
 
-OUTPUT=$(echo "$INPUT" | cor24-run --run build/repl.s --terminal --speed 0 -n 200000000 2>&1)
+# --quiet sends program output to stdout and emulator diagnostics (the
+# "Executed N instructions" line we profile on) to stderr.
+mkdir -p build
+RESULT=$(echo "$INPUT" | cor24-emu --lgo build/repl-standard.lgo --uart-file /dev/stdin \
+    --quiet --speed 0 -n 200000000 2>build/profile.stderr)
 
-echo "$OUTPUT" | grep -v -E '^Assembled |Executed [0-9]+ instructions|^\[CPU'
+echo "$RESULT"
 echo
 echo "--- Profile ---"
-echo "$OUTPUT" | grep -E '^Assembled |Executed [0-9]+ instructions' || true
+grep -E 'Executed [0-9]+ instructions' build/profile.stderr || true
