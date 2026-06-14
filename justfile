@@ -34,17 +34,6 @@ build-full:
     {{tc24r}} src/repl-full.c -o build/repl-full.s
     {{cor24_asm}} build/repl-full.s -o build/repl-full.lgo
 
-# Diagnostic build: full prelude with stack relocated to top of SRAM (~340 KB
-# headroom vs. EBR's hard 8 KB cap). Use to test whether a demo overflows due
-# to C-stack budget rather than an unbounded recursion.
-build-fullbig: build-full
-    #!/usr/bin/env bash
-    set -euo pipefail
-    # Patch _start to load sp = 0x100000 (top of SRAM, grows down) before calling _main
-    awk '/^_start:$/ {print; print "        la      r0,1048576"; print "        mov     sp,r0"; next} {print}' \
-        build/repl-full.s > build/repl-fullbig.s
-    {{cor24_asm}} build/repl-fullbig.s -o build/repl-fullbig.lgo
-
 build-scheme:
     mkdir -p build
     {{tc24r}} src/repl-scheme.c -o build/repl-scheme.s
@@ -126,13 +115,15 @@ eval-full file: build-full
     grep -v '^;;' "{{file}}" | \
         {{cor24_emu}} --lgo build/repl-full.lgo --uart-file /dev/stdin --quiet --speed 0 -n 500000000 2>/dev/null
 
-# Evaluate with full prelude + relocated SRAM stack (diagnostic). If a demo
-# completes here but overflows under `eval-full`, the issue is C-stack budget,
-# not unbounded recursion.
-eval-fullbig file: build-fullbig
+# Evaluate with full prelude at the maximum 8 KB EBR stack (diagnostic). cor24-emu
+# caps the stack at 8 KB EBR — there is no SRAM-stack mode — so this is the
+# deepest-recursion tier available. If a full-prelude program overflows the 3 KB
+# default under `eval-full` but completes here, it needs more C-stack budget; if
+# it still overflows here, suspect unbounded (non-tail) recursion.
+eval-fullbig file: build-full
     #!/usr/bin/env bash
     grep -v '^;;' "{{file}}" | \
-        {{cor24_emu}} --lgo build/repl-fullbig.lgo --uart-file /dev/stdin --quiet --speed 0 -n 500000000 2>/dev/null
+        {{cor24_emu}} --lgo build/repl-full.lgo --uart-file /dev/stdin --quiet --speed 0 -n 500000000 --stack-kilobytes 8 2>/dev/null
 
 # Evaluate with custom prelude (slow: prelude loaded via UART)
 eval-custom file prelude: build-bare
