@@ -725,7 +725,8 @@ void load_prelude() {
     eval_str("(define lazy? (lambda (s) (and (pair? s) (and (pair? (cdr s)) (eq? (car (cdr s)) 'thunk)))))");
     eval_str("(define lazy-car car)");
     eval_str("(define lazy-cdr (lambda (s) (if (lazy? s) (let ((v ((cdr (cdr s))))) (begin (set! s (cons (car s) v)) v)) (cdr s))))");
-    eval_str("(define lazy-take (lambda (n s) (if (= n 0) nil (if (null? s) nil (cons (lazy-car s) (lazy-take (- n 1) (lazy-cdr s)))))))");
+    eval_str("(define lazy-take-helper (lambda (n s acc) (if (= n 0) (reverse acc) (if (null? s) (reverse acc) (lazy-take-helper (- n 1) (lazy-cdr s) (cons (lazy-car s) acc))))))");
+    eval_str("(define lazy-take (lambda (n s) (lazy-take-helper n s nil)))");
     eval_str("(define lazy-map (lambda (f s) (if (null? s) nil (lazy-cons (f (lazy-car s)) (lambda () (lazy-map f (lazy-cdr s)))))))");
     eval_str("(define lazy-filter (lambda (p s) (if (null? s) nil (if (p (lazy-car s)) (lazy-cons (lazy-car s) (lambda () (lazy-filter p (lazy-cdr s)))) (lazy-filter p (lazy-cdr s))))))");
     eval_str("(define iterate (lambda (f x) (lazy-cons x (lambda () (iterate f (f x))))))");
