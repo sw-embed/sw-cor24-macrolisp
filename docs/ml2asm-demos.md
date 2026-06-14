@@ -6,7 +6,7 @@ to produce standalone COR24 programs mixing Lisp and assembly.
 ## Prerequisites
 
 - `tc24r` (Tiny COR24 compiler) on PATH
-- `cor24-run` (COR24 assembler/emulator) on PATH
+- `cor24-asm` (COR24 assembler) and `cor24-emu` (COR24 emulator) on PATH
 - Working directory: `tml24c/`
 
 ## Demo: ISR Echo (demos/isr-echo.l24)
@@ -39,23 +39,24 @@ just demo-isr-echo
 
 ### Run with dump (debug)
 
-After compiling, run the .s directly with cor24-run flags:
+After compiling, assemble the `.s` to a `.lgo` and run it with cor24-emu flags:
 
 ```bash
 just compile demos/isr-echo.l24 > /dev/null
-cor24-run --run build/compiled.s --speed 0 -n 10000000 -u "AB" --dump
+cor24-asm build/compiled.s -o build/compiled.lgo
+cor24-emu --lgo build/compiled.lgo --speed 0 -n 10000000 -u "AB" --dump
 ```
 
 Add `--trace 50` to see the last 50 instructions before halt:
 
 ```bash
-cor24-run --run build/compiled.s --speed 0 -n 10000000 -u "AB" --dump --trace 50
+cor24-emu --lgo build/compiled.lgo --speed 0 -n 10000000 -u "AB" --dump --trace 50
 ```
 
 Add `--step` to trace every instruction (very verbose):
 
 ```bash
-cor24-run --run build/compiled.s --speed 0 -n 1000 -u "A" --step
+cor24-emu --lgo build/compiled.lgo --speed 0 -n 1000 -u "A" --step
 ```
 
 ### Run the regression test
@@ -70,24 +71,25 @@ Compiles isr-echo.l24, runs it with input "AB", verifies "AB" is echoed back.
 
 The compile pipeline has two stages:
 
-1. **Lisp to .s**: The compiler driver (`build/compiler.s`) runs on
-   cor24-run, reads .l24 from UART, calls `compile_program`, emits
+1. **Lisp to .s**: The compiler driver (`build/compiler.lgo`) runs on
+   cor24-emu, reads .l24 from UART, calls `compile_program`, emits
    COR24 assembly to UART.
 
-2. **Assemble and run**: cor24-run assembles the .s and runs it.
+2. **Assemble and run**: cor24-asm assembles the .s to a .lgo, and
+   cor24-emu runs it.
 
 ```
 .l24 source
   |  grep -v '^;;' (strip comment-only lines)
   |  printf '\004' (append Ctrl-D for EOF)
   v
-cor24-run --run build/compiler.s --terminal
+cor24-emu --lgo build/compiler.lgo --uart-file /dev/stdin --quiet
   |  (compiler reads Lisp, emits .s)
   v
 build/compiled.s
-  |
+  |  cor24-asm build/compiled.s -o build/compiled.lgo
   v
-cor24-run --run build/compiled.s [-u "input"] [--dump] [--trace N]
+cor24-emu --lgo build/compiled.lgo [-u "input"] [--dump] [--trace N]
 ```
 
 ### Justfile targets

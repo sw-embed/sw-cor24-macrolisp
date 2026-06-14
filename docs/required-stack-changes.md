@@ -1,4 +1,4 @@
-# Stack Configuration in cor24-run
+# Stack Configuration in cor24-emu
 
 ## Background
 
@@ -14,10 +14,14 @@ The default COR24-TB configuration uses EBR for the stack with SP initialized at
 ## `--stack-kilobytes` flag
 
 ```
-cor24-run --run <file.s> --stack-kilobytes 3    # default (EBR, COR24-TB)
-cor24-run --run <file.s> --stack-kilobytes 8    # full EBR
-cor24-run --run <file.s> --stack-kilobytes 128  # SRAM-backed, large
+cor24-emu --lgo <file.lgo> --stack-kilobytes 3    # default (EBR, COR24-TB)
+cor24-emu --lgo <file.lgo> --stack-kilobytes 8    # full EBR (max for this flag)
 ```
+
+`cor24-emu --stack-kilobytes` accepts only `3` or `8` (EBR). For a larger,
+SRAM-backed stack, relocate SP at startup instead of using this flag — see the
+`build-fullbig` / `eval-fullbig` recipes, which patch `_start` to set
+`sp = 0x100000` (top of SRAM, growing down).
 
 ### Stack placement
 
@@ -45,7 +49,7 @@ For tml24c, SRAM stack would require adjusting `gc_initial_sp` capture — the c
 | Standard (core Lisp) | ~2 KB | `--stack-kilobytes 3` |
 | Full (lazy, threading, etc.) | ~4 KB | `--stack-kilobytes 8` |
 | Experimental | ~4–6 KB | `--stack-kilobytes 8` |
-| Deep recursion / stress test | ~16+ KB | `--stack-kilobytes 32` or more |
+| Deep recursion / stress test | ~16+ KB | SRAM-relocated stack (`just build-fullbig`) |
 
 ### Impact on tml24c
 
@@ -53,6 +57,6 @@ No tml24c code changes needed. The conservative GC captures the actual SP at sta
 
 The justfile would use:
 ```
-run:      cor24-run --run build/repl.s --terminal --echo --speed 0
-run-full: cor24-run --run build/repl-full.s --terminal --echo --speed 0 --stack-kilobytes 8
+run:      cor24-emu --lgo build/repl-standard.lgo --terminal --echo --speed 0
+run-full: cor24-emu --lgo build/repl-full.lgo --terminal --echo --speed 0 --stack-kilobytes 8
 ```

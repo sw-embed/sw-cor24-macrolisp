@@ -9,7 +9,7 @@ just eval examples/demo.l24
 ## How It Works
 
 1. The `.l24` file is preprocessed (comment lines stripped)
-2. Content is piped to `cor24-run --terminal` via stdin
+2. Content is piped to `cor24-emu --uart-file /dev/stdin` via stdin
 3. The emulator's FIFO-drain mechanism feeds bytes to UART RX one at a time as the program reads them
 4. The tml24c REPL evaluates each line and prints results to UART TX
 5. Output is cleaned (prompts and emulator metadata stripped)

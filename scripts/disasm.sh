@@ -25,6 +25,6 @@ echo "To inspect specific functions, grep the assembly:"
 echo "  grep -A 20 '_CL0:' build/tml24c.s"
 echo
 echo "=== REPL assembly ==="
-make -s build/repl.s
-echo "Assembly at: build/repl.s"
-echo "Size: $(wc -l < build/repl.s) lines, $(wc -c < build/repl.s | tr -d ' ') bytes"
+just build-standard
+echo "Assembly at: build/repl-standard.s"
+echo "Size: $(wc -l < build/repl-standard.s) lines, $(wc -c < build/repl-standard.s | tr -d ' ') bytes"

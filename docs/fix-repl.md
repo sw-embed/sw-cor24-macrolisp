@@ -38,6 +38,6 @@ The main binary runs all test suites before entering the REPL, consuming million
 
 ## Current State
 
-- `just run` — interactive REPL via `cor24-run --terminal --echo` (Ctrl-] to exit)
+- `just run` — interactive REPL via `cor24-emu --terminal --echo` (Ctrl-] to exit)
 - `just eval examples/demo.l24` — evaluates `.l24` files and prints results
 - `just test` — runs all 5 test suites (scaffold, reader, eval, gc, compile)

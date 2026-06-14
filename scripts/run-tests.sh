@@ -11,9 +11,9 @@ cd "$PROJECT_DIR"
 
 if [[ "${1:-}" == "-v" ]]; then
     just build
-    cor24-run --run build/tml24c.s --speed 0 -n 10000000 2>&1 | \
-        grep -E '^\[UART TX' | \
-        python3 scripts/extract-uart.py
+    # Full emulator output, including the decoded "UART output:" summary line.
+    # -u '\x04' feeds an EOF so the scaffold halts cleanly after its self-tests.
+    cor24-emu --lgo build/tml24c.lgo -u '\x04' --speed 0 -n 200000000 2>&1
 else
     just test
 fi

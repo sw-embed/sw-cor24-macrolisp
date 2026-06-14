@@ -1,6 +1,6 @@
 /* tml24c bare REPL -- no prelude, just the eval loop.
  * Prelude loaded from .l24 files via UART input.
- * Usage: cat prelude/standard.l24 myapp.l24 | cor24-run --run build/repl-bare.s --terminal
+ * Usage: cat prelude/standard.l24 myapp.l24 | cor24-emu --lgo build/repl-bare.lgo --uart-file /dev/stdin
  */
 
 #include "tml.h"

@@ -1,5 +1,9 @@
 # Changelog
 
+## 2026-06-13
+
+- migrate the whole repo off the deprecated `cor24-run` onto `cor24-asm` (`.s` → `.lgo`) + `cor24-emu` (`--lgo`). `cor24-run` bundled an old internal assembler whose output had drifted from the current `tc24r` — it was miscompiling `tml24c.s` and PANICking the test scaffold; the canonical `cor24-asm` assembles it correctly and `just test` passes again (all 5 suites). justfile: `build-*` recipes now also emit a `.lgo`; batch eval/demos feed input via `--uart-file /dev/stdin` (flow-controlled, EOF-appended — no dropped bytes during prelude load) and use `--quiet`; `test` bumped to `-n 200000000` (real cost ~94M). scripts: migrated `build.sh`, `run-tests.sh`, `repl.sh`, `eval-expr.sh`, `profile.sh`, `load-eval.sh`, `disasm.sh`, also repairing their stale `just build-repl` / `build/repl.s` references (target no longer exists). Docs/comments updated (`usage.md`, `ml2asm-demos.md`, `required-stack-changes.md`, `prelude-choices.md`, `eval-file-plan.md`, `bugs.md`, `fix-repl.md`, `src/*.c` headers, `examples/prelude.l24`, `bugs/bug006`, `bugs/bug007`). Snapshot regenerated under the new tools (bytes shift 12625→14976 as codegen addresses moved; verified behaviorally identical to the from-scratch standard REPL). No language/compiler changes.
+
 ## 2026-05-01
 
 - `main.c`: sync the test scaffold's inlined prelude copies (`range`, `repeat`, `take`, `zip`, `flatten`) with the tail-recursive forms in `prelude-full.h` so the test path doesn't diverge from production.

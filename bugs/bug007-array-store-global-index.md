@@ -46,7 +46,8 @@ int main() {
 
 ```
 tc24r bug007.c -o bug007.s
-cor24-run --run bug007.s
+cor24-asm bug007.s -o bug007.lgo
+cor24-emu --lgo bug007.lgo
 ```
 
 ## Actual output

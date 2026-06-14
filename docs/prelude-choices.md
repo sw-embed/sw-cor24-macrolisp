@@ -144,4 +144,4 @@ cat prelude/full.l24 | cor24-run --run build/repl-bare.s --terminal
 1. First: Factor current `load_prelude()` into tiers (split the C strings)
 2. Second: Add `just run-tiny`, `just run-full` recipes
 3. Third: Create prelude `.l24` files for option C flexibility
-4. Fourth: Add `--stack` to cor24-run for full-prelude support
+4. Fourth: Pass `--stack-kilobytes 8` to cor24-emu for full-prelude support

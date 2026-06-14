@@ -6,7 +6,7 @@
  *
  * Build: just build-snapshot
  * Fast:  just run-fast (uses pre-built snapshot)
- * Slow:  cor24-run --run build/repl-snapshot.s --terminal --echo --speed 0
+ * Slow:  cor24-emu --lgo build/repl-snapshot.lgo --terminal --echo --speed 0
  *        (no --load-binary → falls back to eval_str prelude)
  */
 
