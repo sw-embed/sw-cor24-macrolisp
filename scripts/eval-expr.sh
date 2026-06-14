@@ -9,7 +9,6 @@ PROJECT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 [[ $# -lt 1 ]] && { echo "Usage: $0 '<expression>'"; exit 1; }
 
 cd "$PROJECT_DIR"
-just build-repl
+just build-standard
 
-echo "$*" | cor24-run --run build/repl.s --terminal --speed 0 -n 200000000 2>&1 | \
-    grep -v -E '^Assembled |Executed [0-9]+ instructions|^\[CPU'
+echo "$*" | cor24-emu --lgo build/repl-standard.lgo --uart-file /dev/stdin --quiet --speed 0 -n 200000000 2>/dev/null

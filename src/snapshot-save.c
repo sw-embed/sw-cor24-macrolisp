@@ -4,7 +4,7 @@
  * Run:   just snapshot
  *
  * Outputs a binary blob that can be loaded with:
- *   cor24-run --run build/repl-snapshot.s --load-binary build/prelude.snap@0x080000
+ *   cor24-emu --lgo build/repl-snapshot.lgo --load-binary build/prelude.snap@0x080000
  */
 
 #include "tml.h"

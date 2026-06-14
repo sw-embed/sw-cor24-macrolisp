@@ -5,13 +5,18 @@ cd "$(dirname "$0")/.."
 
 echo "=== sw-cor24-macrolisp — Tiny Macro Lisp for COR24 ==="
 
-# Verify tc24r and cor24-run are available
+# Verify the COR24 toolchain is available: tc24r (C -> .s),
+# cor24-asm (.s -> .lgo), cor24-emu (run .lgo).
 if ! command -v tc24r &>/dev/null; then
-  echo "ERROR: tc24r not found. Build sw-cor24-x-tinyc first."
+  echo "ERROR: tc24r not found. Install the COR24 toolchain (see onboarding)."
   exit 1
 fi
-if ! command -v cor24-run &>/dev/null; then
-  echo "ERROR: cor24-run not found. Build sw-cor24-emulator first."
+if ! command -v cor24-asm &>/dev/null; then
+  echo "ERROR: cor24-asm not found. Install the COR24 toolchain (see onboarding)."
+  exit 1
+fi
+if ! command -v cor24-emu &>/dev/null; then
+  echo "ERROR: cor24-emu not found. Install the COR24 toolchain (see onboarding)."
   exit 1
 fi
 

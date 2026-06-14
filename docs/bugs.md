@@ -38,5 +38,5 @@ Clojure's `and`/`or` are variadic. Ours only take two args. Nest for more: `(and
 | REPL line | 1024 characters | With paren-depth continuation |
 | GC root stack | 256 entries | Mostly unused with conservative GC |
 | Symbol table | 256 symbols / 2048 bytes | Interned, never freed |
-| Stack (EBR) | 3–8 KB | `--stack-kilobytes` flag in cor24-run |
+| Stack (EBR) | 3–8 KB | `--stack-kilobytes` flag in cor24-emu |
 | Fixnum range | -2,097,152 to 2,097,151 | 22-bit signed (24-bit word, 2-bit tag) |

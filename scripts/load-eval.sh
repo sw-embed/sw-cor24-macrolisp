@@ -38,7 +38,7 @@ done
 [[ -n "$PRELUDE" && ! -f "$PRELUDE" ]] && { echo "Error: $PRELUDE not found"; exit 1; }
 
 cd "$PROJECT_DIR"
-just build-repl
+just build-standard
 
 # Build input: optional prelude + main file
 INPUT_CMD="grep -v '^;;' \"$FILE\""
@@ -47,8 +47,7 @@ if [[ -n "$PRELUDE" ]]; then
 fi
 
 if [[ $VERBOSE -eq 1 ]]; then
-    eval "$INPUT_CMD" | cor24-run --run build/repl.s --terminal --speed 0 -n "$MAX_INSN" 2>&1
+    eval "$INPUT_CMD" | cor24-emu --lgo build/repl-standard.lgo --uart-file /dev/stdin --speed 0 -n "$MAX_INSN" 2>&1
 else
-    eval "$INPUT_CMD" | cor24-run --run build/repl.s --terminal --speed 0 -n "$MAX_INSN" 2>&1 | \
-        grep -v -E '^Assembled |Executed [0-9]+ instructions|^\[CPU'
+    eval "$INPUT_CMD" | cor24-emu --lgo build/repl-standard.lgo --uart-file /dev/stdin --quiet --speed 0 -n "$MAX_INSN" 2>/dev/null
 fi

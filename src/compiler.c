@@ -1,6 +1,6 @@
 /* tml24c compiler driver -- reads .l24 from UART, emits COR24 .s
  *
- * Usage: cat program.l24 | cor24-run --run build/compiler.s --terminal --speed 0
+ * Usage: cat program.l24 | cor24-emu --lgo build/compiler.lgo --uart-file /dev/stdin --quiet
  * Output: COR24 assembly on UART (stdout)
  */
 
